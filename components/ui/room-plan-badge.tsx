@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge"
-import type { RoomPlan } from "@/lib/types"
-import { Diamond, Award, Medal, Circle } from "lucide-react"
+import { ROOM_PLANS, type RoomPlan } from "@/lib/types"
+import { Crown, Star, Shield, Circle } from "lucide-react"
 
 interface RoomPlanBadgeProps {
-  plan: RoomPlan
+  plan: RoomPlan | string
   size?: "sm" | "md" | "lg"
   showIcon?: boolean
 }
@@ -11,18 +11,23 @@ interface RoomPlanBadgeProps {
 const getPlanIcon = (planId: string) => {
   switch (planId) {
     case "premium":
-      return Diamond
+      return Crown
     case "gold":
-      return Award
+      return Star
     case "silver":
-      return Medal
+      return Shield
     default:
       return Circle
   }
 }
 
 export function RoomPlanBadge({ plan, size = "md", showIcon = true }: RoomPlanBadgeProps) {
-  const Icon = getPlanIcon(plan.id)
+  // إذا كان plan من نوع string، ابحث عنه في ROOM_PLANS
+  const planData = typeof plan === "string" 
+    ? ROOM_PLANS.find(p => p.id === plan) || ROOM_PLANS.find(p => p.id === "basic")!
+    : plan
+
+  const Icon = getPlanIcon(planData.id)
 
   const sizeClasses = {
     sm: "text-xs px-2 py-1",
@@ -40,13 +45,13 @@ export function RoomPlanBadge({ plan, size = "md", showIcon = true }: RoomPlanBa
     <Badge
       className={`font-arabic font-medium ${sizeClasses[size]} border-0`}
       style={{
-        backgroundColor: plan.color,
+        backgroundColor: planData.color,
         color: "#ffffff",
-        boxShadow: `0 2px 8px ${plan.color}40`,
+        boxShadow: `0 2px 8px ${planData.color}40`,
       }}
     >
       {showIcon && <Icon className={`${iconSizes[size]} ml-1`} />}
-      {plan.nameAr}
+      {planData.nameAr}
     </Badge>
   )
 }
