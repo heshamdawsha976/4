@@ -366,7 +366,15 @@ export default function RoomsPage() {
                       </Button>
                     </div>
 
-                    <div className="mt-3 text-xs text-gray-500 font-arabic text-center">مالك الغرفة: {room.owner}</div>
+                    <div className="mt-3 p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-1">
+                          <Crown className="w-3 h-3 text-yellow-500" />
+                          <span className="font-arabic text-gray-600">مالك الغرفة:</span>
+                        </div>
+                        <span className="font-arabic font-medium text-gray-800">{room.owner}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
