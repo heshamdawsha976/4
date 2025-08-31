@@ -92,10 +92,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(mockUser)
+      setIsGuest(false)
       localStorage.setItem("liqaa_user", JSON.stringify(mockUser))
+      localStorage.removeItem("liqaa_guest")
       return true
     } catch (error) {
       console.error("Login error:", error)
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loginAsGuest = async (nickname: string, country?: string): Promise<boolean> => {
+    setIsLoading(true)
+    try {
+      const guestUser: User = {
+        id: `guest_${Date.now()}`,
+        username: nickname,
+        firstName: nickname,
+        lastName: "",
+        email: "",
+        country: country || "Unknown",
+        role: "guest",
+        isOnline: true,
+        lastSeen: new Date(),
+        joinedAt: new Date(),
+        coins: 0,
+        level: 1,
+        experience: 0,
+        badges: ["guest"],
+        preferences: {
+          language: "ar",
+          notifications: {
+            sound: true,
+            mentions: true,
+            privateMessages: false,
+            roomInvites: true,
+          },
+          privacy: {
+            showOnlineStatus: true,
+            allowPrivateMessages: false,
+            showProfile: false,
+          },
+        },
+      }
+
+      setUser(guestUser)
+      setIsGuest(true)
+      localStorage.setItem("liqaa_user", JSON.stringify(guestUser))
+      localStorage.setItem("liqaa_guest", "true")
+      return true
+    } catch (error) {
+      console.error("Guest login error:", error)
       return false
     } finally {
       setIsLoading(false)
