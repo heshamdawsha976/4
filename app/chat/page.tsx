@@ -223,35 +223,73 @@ export default function ChatPage() {
           <Card className="lg:col-span-2">
             <CardHeader>
               <div className="flex items-center justify-between">
+                {/* أدوات الوسائط المحسنة */}
                 <div className="flex items-center gap-3">
-                  <Button
-                    variant={isInCall ? "destructive" : "outline"}
-                    size="sm"
-                    onClick={() => setIsInCall(!isInCall)}
-                  >
-                    {isInCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant={isVoiceEnabled ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-                  >
-                    {isVoiceEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant={isVideoEnabled ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setIsVideoEnabled(!isVideoEnabled)}
-                  >
-                    {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                  </Button>
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
+                    <Button
+                      variant={isInCall ? "destructive" : "outline"}
+                      size="sm"
+                      onClick={() => setIsInCall(!isInCall)}
+                      className={`font-arabic transition-all duration-200 ${isInCall ? 'shadow-lg animate-pulse' : ''}`}
+                    >
+                      {isInCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
+                      {isInCall ? "إنهاء" : "مكالمة"}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
+                    <Button
+                      variant={isVoiceEnabled ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                      className={`transition-all duration-200 hover:scale-105 ${
+                        isVoiceEnabled
+                          ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
+                          : 'border-green-200 text-green-700 hover:bg-green-50'
+                      }`}
+                    >
+                      {isVoiceEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                    </Button>
+
+                    <Button
+                      variant={isVideoEnabled ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsVideoEnabled(!isVideoEnabled)}
+                      className={`transition-all duration-200 hover:scale-105 ${
+                        isVideoEnabled
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg'
+                          : 'border-blue-200 text-blue-700 hover:bg-blue-50'
+                      }`}
+                    >
+                      {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                    </Button>
+                  </div>
+
+                  {/* مؤشرات الحالة */}
+                  <div className="flex flex-col gap-1">
+                    {isInCall && (
+                      <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="font-arabic">مباشر</span>
+                      </div>
+                    )}
+                    <div className="flex gap-1">
+                      {isVoiceEnabled && (
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      )}
+                      {isVideoEnabled && (
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      )}
+                    </div>
+                  </div>
                 </div>
+
                 <div className="text-right">
-                  <CardTitle className="flex items-center gap-2">
-                    {selectedRoom?.name}
+                  <CardTitle className="flex items-center gap-2 font-arabic">
                     {selectedRoom && <RoomPlanBadge plan={selectedRoom.plan} />}
+                    {selectedRoom?.name}
                   </CardTitle>
-                  <p className="text-sm text-gray-600">{selectedRoom?.description}</p>
+                  <p className="text-sm text-gray-600 font-arabic">{selectedRoom?.description}</p>
                 </div>
               </div>
             </CardHeader>
