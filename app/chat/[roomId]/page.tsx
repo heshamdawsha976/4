@@ -126,46 +126,97 @@ export default function RoomChatPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
       <div className="max-w-6xl mx-auto p-4">
-        {/* شريط التنقل العلوي */}
+        {/* شريط التنقل العلوي المحسن */}
         <div className="mb-6">
-          <div className="flex items-center justify-between bg-white rounded-lg p-4 shadow-sm">
-            <div className="flex items-center gap-4">
-              <Button variant={isInCall ? "destructive" : "outline"} size="sm" onClick={() => setIsInCall(!isInCall)}>
-                {isInCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
-                {isInCall ? "إنهاء المكالمة" : "بدء مكالمة"}
-              </Button>
-              <Button
-                variant={isVoiceEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
-              >
-                {isVoiceEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant={isVideoEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setIsVideoEnabled(!isVideoEnabled)}
-              >
-                {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-              </Button>
-            </div>
+          <Card className="bg-white/90 backdrop-blur-md border-pink-100 shadow-xl">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                {/* أدوات الوسائط المحسنة */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
+                    <Button
+                      variant={isInCall ? "destructive" : "outline"}
+                      size="sm"
+                      onClick={() => setIsInCall(!isInCall)}
+                      className={`font-arabic transition-all duration-200 ${isInCall ? 'shadow-lg' : ''}`}
+                    >
+                      {isInCall ? <PhoneOff className="h-4 w-4" /> : <Phone className="h-4 w-4" />}
+                      {isInCall ? "إنهاء المكالمة" : "بدء مكالمة"}
+                    </Button>
+                  </div>
 
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="flex items-center gap-2">
-                  <RoomPlanBadge plan={room.plan} />
-                  <h1 className="text-xl font-bold">{room.name}</h1>
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-xl p-2">
+                    <Button
+                      variant={isVoiceEnabled ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsVoiceEnabled(!isVoiceEnabled)}
+                      className={`transition-all duration-200 hover:scale-105 ${
+                        isVoiceEnabled
+                          ? 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
+                          : 'border-green-200 text-green-700 hover:bg-green-50'
+                      }`}
+                    >
+                      {isVoiceEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                    </Button>
+
+                    <Button
+                      variant={isVideoEnabled ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setIsVideoEnabled(!isVideoEnabled)}
+                      className={`transition-all duration-200 hover:scale-105 ${
+                        isVideoEnabled
+                          ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg'
+                          : 'border-blue-200 text-blue-700 hover:bg-blue-50'
+                      }`}
+                    >
+                      {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                    </Button>
+                  </div>
+
+                  {/* مؤشرات الحالة */}
+                  <div className="flex items-center gap-2 text-xs">
+                    {isInCall && (
+                      <div className="flex items-center gap-1 bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="font-arabic">في مكالمة</span>
+                      </div>
+                    )}
+                    {isVoiceEnabled && (
+                      <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                        <Mic className="w-3 h-3" />
+                        <span className="font-arabic">الميكروفون مفعل</span>
+                      </div>
+                    )}
+                    {isVideoEnabled && (
+                      <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                        <Video className="w-3 h-3" />
+                        <span className="font-arabic">الكاميرا مفعلة</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600">{room.description}</p>
+
+                {/* معلومات الغرفة */}
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 mb-1">
+                      <RoomPlanBadge plan={room.plan} />
+                      <h1 className="text-xl font-bold font-arabic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                        {room.name}
+                      </h1>
+                    </div>
+                    <p className="text-sm text-gray-600 font-arabic">{room.description}</p>
+                  </div>
+                  <Link href="/rooms">
+                    <Button variant="outline" size="sm" className="font-arabic border-pink-200 hover:bg-pink-50">
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                      العودة للغرف
+                    </Button>
+                  </Link>
+                </div>
               </div>
-              <Link href="/chat">
-                <Button variant="outline" size="sm">
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                  العودة للغرف
-                </Button>
-              </Link>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-12rem)]">
