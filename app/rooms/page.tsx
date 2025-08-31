@@ -217,19 +217,31 @@ export default function RoomsPage() {
             {/* Quick Stats */}
             <Card className="bg-white/80 backdrop-blur-sm border-pink-100 shadow-lg mt-6">
               <CardHeader>
-                <CardTitle className="font-arabic text-lg">إحصائيات سريعة</CardTitle>
+                <CardTitle className="font-arabic text-lg flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-pink-600" />
+                  إحصائيات سريعة
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-pink-600 mb-1">156</div>
+                <div className="text-center p-3 bg-gradient-to-r from-pink-50 to-pink-100 rounded-lg">
+                  <div className="text-2xl font-bold text-pink-600 mb-1 flex items-center justify-center gap-2">
+                    <Zap className="w-6 h-6" />
+                    156
+                  </div>
                   <div className="text-sm text-gray-600 font-arabic">غرفة نشطة</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">2.3K</div>
+                <div className="text-center p-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg">
+                  <div className="text-2xl font-bold text-purple-600 mb-1 flex items-center justify-center gap-2">
+                    <Users className="w-6 h-6" />
+                    2.3K
+                  </div>
                   <div className="text-sm text-gray-600 font-arabic">مستخدم متصل</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-indigo-600 mb-1">24/7</div>
+                <div className="text-center p-3 bg-gradient-to-r from-green-50 to-green-100 rounded-lg">
+                  <div className="text-2xl font-bold text-green-600 mb-1 flex items-center justify-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    مباشر
+                  </div>
                   <div className="text-sm text-gray-600 font-arabic">متاح دائماً</div>
                 </div>
               </CardContent>
