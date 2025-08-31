@@ -1,416 +1,276 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { useMediaStream } from "@/hooks/use-media-stream"
-import { useWebRTC } from "@/hooks/use-webrtc"
-import {
-  Video,
-  VideoOff,
+import { MediaControls } from "./media-controls"
+import { 
+  Maximize2, 
+  Minimize2, 
+  Pin, 
+  PinOff,
+  Users,
+  Grid3X3,
+  Monitor,
   Mic,
   MicOff,
-  Monitor,
-  MonitorOff,
-  PhoneOff,
-  Maximize2,
-  Minimize2,
-  Settings,
-  Loader2,
+  Video,
+  VideoOff
 } from "lucide-react"
 
-interface VideoChatProps {
-  roomId: string
-  userId: string
-  participants: Array<{
-    id: string
-    name: string
-    avatar?: string
-    role: string
-  }>
-  onParticipantUpdate?: (participants: any[]) => void
+interface Participant {
+  id: string
+  name: string
+  avatar?: string
+  isAudioEnabled: boolean
+  isVideoEnabled: boolean
+  isScreenSharing: boolean
+  isSpeaking: boolean
+  role?: string
 }
 
-export function VideoChat({ roomId, userId, participants, onParticipantUpdate }: VideoChatProps) {
-  const [mediaState, mediaControls] = useMediaStream()
-  const [webrtcState, webrtcControls] = useWebRTC()
-  const [isInCall, setIsInCall] = useState(false)
+interface VideoChatProps {
+  participants: Participant[]
+  currentUserId: string
+  isInCall: boolean
+  onCallToggle: () => void
+  onVoiceToggle: () => void
+  onVideoToggle: () => void
+  onScreenShareToggle: () => void
+  className?: string
+}
+
+export function VideoChat({
+  participants,
+  currentUserId,
+  isInCall,
+  onCallToggle,
+  onVoiceToggle,
+  onVideoToggle,
+  onScreenShareToggle,
+  className = ""
+}: VideoChatProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null)
+  const [isPinned, setIsPinned] = useState(false)
+  const [viewMode, setViewMode] = useState<"grid" | "speaker" | "sidebar">("grid")
+  const [pinnedParticipant, setPinnedParticipant] = useState<string | null>(null)
+  const videoContainerRef = useRef<HTMLDivElement>(null)
 
-  const localVideoRef = useRef<HTMLVideoElement>(null)
-  const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
-  const containerRef = useRef<HTMLDivElement>(null)
+  const currentUser = participants.find(p => p.id === currentUserId)
+  const otherParticipants = participants.filter(p => p.id !== currentUserId)
+  const speakingParticipant = participants.find(p => p.isSpeaking && p.id !== currentUserId)
+  const screenSharingParticipant = participants.find(p => p.isScreenSharing)
 
-  // ربط المسار المحلي بعنصر الفيديو
   useEffect(() => {
-    if (localVideoRef.current && mediaState.stream) {
-      localVideoRef.current.srcObject = mediaState.stream
+    if (screenSharingParticipant) {
+      setViewMode("speaker")
+      setPinnedParticipant(screenSharingParticipant.id)
     }
-  }, [mediaState.stream])
+  }, [screenSharingParticipant])
 
-  // ربط المسارات البعيدة بعناصر الفيديو
-  useEffect(() => {
-    webrtcState.remoteStreams.forEach((stream, participantId) => {
-      let videoElement = remoteVideoRefs.current.get(participantId)
+  const VideoFrame = ({ participant, isMain = false, className = "" }: { 
+    participant: Participant
+    isMain?: boolean
+    className?: string 
+  }) => (
+    <div 
+      className={`relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg overflow-hidden ${className}`}
+      onClick={() => !isMain && setPinnedParticipant(participant.id)}
+    >
+      {/* فيديو الخلفية */}
+      <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-purple-500/20"></div>
+      
+      {/* محتوى الفيديو */}
+      {participant.isVideoEnabled ? (
+        <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+          <span className="text-white/70 text-sm font-arabic">فيديو {participant.name}</span>
+        </div>
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <Avatar className={isMain ? "w-20 h-20" : "w-12 h-12"}>
+            <AvatarImage src={participant.avatar} />
+            <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-600 text-white font-arabic">
+              {participant.name[0]}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      )}
 
-      if (!videoElement) {
-        videoElement = document.createElement("video")
-        videoElement.autoplay = true
-        videoElement.playsInline = true
-        videoElement.muted = false // الفيديو البعيد لا يجب كتمه
-        remoteVideoRefs.current.set(participantId, videoElement)
-      }
-
-      if (videoElement.srcObject !== stream) {
-        videoElement.srcObject = stream
-      }
-    })
-  }, [webrtcState.remoteStreams])
-
-  // الانضمام للمكالمة المرئية
-  const joinVideoCall = async () => {
-    try {
-      setIsInCall(true)
-      await mediaControls.startVideo()
-      await webrtcControls.connect(roomId, userId)
-
-      if (mediaState.stream) {
-        webrtcControls.addLocalStream(mediaState.stream)
-      }
-    } catch (error) {
-      console.error("[v0] Error joining video call:", error)
-      setIsInCall(false)
-    }
-  }
-
-  // مغادرة المكالمة
-  const leaveCall = () => {
-    setIsInCall(false)
-    mediaControls.cleanup()
-    webrtcControls.disconnect()
-    remoteVideoRefs.current.clear()
-  }
-
-  // تبديل الكاميرا
-  const toggleCamera = async () => {
-    await mediaControls.toggleVideo()
-  }
-
-  // تبديل الميكروفون
-  const toggleMicrophone = async () => {
-    await mediaControls.toggleAudio()
-  }
-
-  // تبديل مشاركة الشاشة
-  const toggleScreenShare = async () => {
-    if (mediaState.isScreenSharing) {
-      await mediaControls.stopScreenShare()
-    } else {
-      await mediaControls.startScreenShare()
-    }
-  }
-
-  // تبديل وضع ملء الشاشة
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen()
-      setIsFullscreen(true)
-    } else {
-      document.exitFullscreen()
-      setIsFullscreen(false)
-    }
-  }
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case "master":
-        return "border-yellow-500 bg-yellow-50"
-      case "super_admin":
-        return "border-red-500 bg-red-50"
-      case "admin":
-        return "border-blue-500 bg-blue-50"
-      case "moderator":
-        return "border-green-500 bg-green-50"
-      default:
-        return "border-gray-300 bg-gray-50"
-    }
-  }
-
-  const getParticipantVideo = (participantId: string) => {
-    return remoteVideoRefs.current.get(participantId)
-  }
-
-  return (
-    <div ref={containerRef} className="w-full">
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          {/* أدوات التحكم العلوية */}
-          <div className="p-4 bg-gray-50 border-b flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold font-arabic">المكالمة المرئية</h3>
-              {isInCall && (
-                <Badge variant="outline" className="font-arabic bg-green-50 text-green-700 border-green-200">
-                  متصل • {participants.length} مشارك
-                </Badge>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {isInCall && (
-                <>
-                  <Button onClick={toggleFullscreen} variant="ghost" size="sm" className="hover:bg-gray-200">
-                    {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="hover:bg-gray-200">
-                    <Settings className="w-4 h-4" />
-                  </Button>
-                </>
-              )}
-            </div>
+      {/* معلومات المشارك */}
+      <div className="absolute bottom-2 left-2 right-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-white text-sm font-arabic bg-black/50 px-2 py-1 rounded">
+              {participant.name}
+            </span>
+            {participant.role && (
+              <Badge className="text-xs">
+                {participant.role}
+              </Badge>
+            )}
           </div>
-
-          {!isInCall ? (
-            /* شاشة الانضمام */
-            <div className="p-8 text-center">
-              <div className="mb-6">
-                <div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Video className="w-12 h-12 text-white" />
-                </div>
-                <h3 className="text-xl font-bold font-arabic mb-2">انضم للمكالمة المرئية</h3>
-                <p className="text-gray-600 font-arabic">شارك في محادثة مرئية مع المشاركين الآخرين</p>
+          
+          <div className="flex items-center gap-1">
+            {participant.isSpeaking && (
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            )}
+            {!participant.isAudioEnabled && (
+              <div className="bg-red-500 rounded-full p-1">
+                <MicOff className="w-3 h-3 text-white" />
               </div>
-
-              {/* معاينة الكاميرا */}
-              <div className="mb-6">
-                <div className="relative w-64 h-48 mx-auto bg-gray-900 rounded-lg overflow-hidden">
-                  {mediaState.stream && mediaState.isVideoEnabled ? (
-                    <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <VideoOff className="w-12 h-12 text-gray-400" />
-                    </div>
-                  )}
-
-                  <div className="absolute bottom-2 left-2 right-2 flex justify-center gap-2">
-                    <Button
-                      onClick={toggleCamera}
-                      variant={mediaState.isVideoEnabled ? "default" : "secondary"}
-                      size="sm"
-                    >
-                      {mediaState.isVideoEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-                    </Button>
-                    <Button
-                      onClick={toggleMicrophone}
-                      variant={mediaState.isAudioEnabled ? "default" : "secondary"}
-                      size="sm"
-                    >
-                      {mediaState.isAudioEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
+            )}
+            {participant.isScreenSharing && (
+              <div className="bg-blue-500 rounded-full p-1">
+                <Monitor className="w-3 h-3 text-white" />
               </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-              <Button
-                onClick={joinVideoCall}
-                className="bg-green-500 hover:bg-green-600 text-white font-arabic px-8 py-3"
-                disabled={webrtcState.isConnecting || mediaState.isLoading}
-              >
-                {webrtcState.isConnecting || mediaState.isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                ) : (
-                  <Video className="w-4 h-4 ml-2" />
-                )}
-                {webrtcState.isConnecting ? "جاري الاتصال..." : "انضمام للمكالمة"}
-              </Button>
-            </div>
-          ) : (
-            /* واجهة المكالمة */
-            <div className="relative">
-              {/* الفيديو الرئيسي */}
-              <div className="relative bg-gray-900" style={{ aspectRatio: "16/9" }}>
-                {selectedParticipant ? (
-                  /* فيديو المشارك المحدد */
-                  <div className="w-full h-full">
-                    <VideoParticipant
-                      participantId={selectedParticipant}
-                      participant={participants.find((p) => p.id === selectedParticipant)!}
-                      videoElement={getParticipantVideo(selectedParticipant)}
-                      isMain={true}
-                    />
-                  </div>
-                ) : (
-                  /* الفيديو المحلي */
-                  <div className="w-full h-full relative">
-                    {mediaState.isVideoEnabled ? (
-                      <video ref={localVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <div className="text-center text-white">
-                          <VideoOff className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                          <p className="font-arabic">الكاميرا مغلقة</p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="absolute bottom-4 left-4">
-                      <Badge className="bg-black/50 text-white font-arabic">أنت</Badge>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* شريط المشاركين السفلي */}
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {/* الفيديو المحلي المصغر */}
-                  <div
-                    className={`relative flex-shrink-0 w-32 h-24 bg-gray-900 rounded-lg overflow-hidden cursor-pointer border-2 ${
-                      !selectedParticipant ? "border-white" : "border-transparent"
-                    }`}
-                    onClick={() => setSelectedParticipant(null)}
-                  >
-                    {mediaState.isVideoEnabled ? (
-                      <video
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-cover"
-                        srcObject={mediaState.stream}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <VideoOff className="w-6 h-6 text-gray-400" />
-                      </div>
-                    )}
-                    <div className="absolute bottom-1 left-1">
-                      <Badge className="bg-black/70 text-white text-xs font-arabic">أنت</Badge>
-                    </div>
-                  </div>
-
-                  {/* فيديوهات المشاركين */}
-                  {Array.from(webrtcState.remoteStreams.entries()).map(([participantId, stream]) => {
-                    const participant = participants.find((p) => p.id === participantId)
-                    if (!participant) return null
-
-                    return (
-                      <div
-                        key={participantId}
-                        className={`relative flex-shrink-0 w-32 h-24 bg-gray-900 rounded-lg overflow-hidden cursor-pointer border-2 ${
-                          selectedParticipant === participantId ? "border-white" : "border-transparent"
-                        }`}
-                        onClick={() => setSelectedParticipant(participantId)}
-                      >
-                        <VideoParticipant
-                          participantId={participantId}
-                          participant={participant}
-                          videoElement={getParticipantVideo(participantId)}
-                          isMain={false}
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
-              {/* أدوات التحكم */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                <div className="flex items-center gap-3 bg-black/70 rounded-full px-6 py-3">
-                  <Button
-                    onClick={toggleMicrophone}
-                    variant={mediaState.isAudioEnabled ? "secondary" : "destructive"}
-                    size="sm"
-                    className="rounded-full"
-                  >
-                    {mediaState.isAudioEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-                  </Button>
-
-                  <Button
-                    onClick={toggleCamera}
-                    variant={mediaState.isVideoEnabled ? "secondary" : "destructive"}
-                    size="sm"
-                    className="rounded-full"
-                  >
-                    {mediaState.isVideoEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-                  </Button>
-
-                  <Button
-                    onClick={toggleScreenShare}
-                    variant={mediaState.isScreenSharing ? "default" : "secondary"}
-                    size="sm"
-                    className="rounded-full"
-                  >
-                    {mediaState.isScreenSharing ? <MonitorOff className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
-                  </Button>
-
-                  <Button onClick={leaveCall} variant="destructive" size="sm" className="rounded-full">
-                    <PhoneOff className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* رسائل الخطأ */}
-          {(mediaState.error || webrtcState.error) && (
-            <div className="p-4 bg-red-50 border-t border-red-200">
-              <p className="text-red-700 font-arabic text-sm">{mediaState.error || webrtcState.error}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* تأثير التحدث */}
+      {participant.isSpeaking && (
+        <div className="absolute inset-0 border-2 border-green-400 rounded-lg animate-pulse"></div>
+      )}
     </div>
   )
-}
 
-// مكون فرعي لعرض فيديو المشارك
-function VideoParticipant({
-  participantId,
-  participant,
-  videoElement,
-  isMain,
-}: {
-  participantId: string
-  participant: any
-  videoElement?: HTMLVideoElement
-  isMain: boolean
-}) {
-  const videoRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (videoRef.current && videoElement) {
-      videoRef.current.appendChild(videoElement)
-      videoElement.className = "w-full h-full object-cover"
-    }
-
-    return () => {
-      if (videoElement && videoElement.parentNode) {
-        videoElement.parentNode.removeChild(videoElement)
-      }
-    }
-  }, [videoElement])
+  if (!isInCall) {
+    return (
+      <Card className={`${className} bg-gray-100 border-dashed border-2 border-gray-300`}>
+        <CardContent className="flex flex-col items-center justify-center h-64 text-gray-500">
+          <Users className="w-12 h-12 mb-4" />
+          <p className="font-arabic text-lg mb-4">لا توجد مكالمة نشطة</p>
+          <Button 
+            onClick={onCallToggle}
+            className="font-arabic bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+          >
+            بدء مكالمة فيديو
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
-    <div className="relative w-full h-full">
-      <div ref={videoRef} className="w-full h-full bg-gray-800">
-        {!videoElement && (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-center text-white">
-              <Avatar className={`mx-auto mb-2 ${isMain ? "w-16 h-16" : "w-8 h-8"}`}>
-                <AvatarImage src={participant.avatar || "/placeholder.svg"} />
-                <AvatarFallback className="font-arabic">{participant.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              {isMain && <p className="font-arabic text-sm opacity-75">الكاميرا مغلقة</p>}
+    <Card className={`${className} relative bg-gray-900 text-white overflow-hidden`}>
+      {/* شريط التحكم العلوي */}
+      <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Badge className="bg-red-500 text-white font-arabic">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse ml-1"></div>
+            مباشر
+          </Badge>
+          <Badge variant="secondary" className="font-arabic">
+            {participants.length} مشارك
+          </Badge>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* أزرار ��بديل العرض */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setViewMode(viewMode === "grid" ? "speaker" : "grid")}
+            className="text-white hover:bg-white/10"
+          >
+            <Grid3X3 className="w-4 h-4" />
+          </Button>
+
+          {/* زر تثبيت */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsPinned(!isPinned)}
+            className="text-white hover:bg-white/10"
+          >
+            {isPinned ? <PinOff className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
+          </Button>
+
+          {/* زر ملء الشاشة */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="text-white hover:bg-white/10"
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </Button>
+        </div>
+      </div>
+
+      <CardContent className="p-4 h-full" ref={videoContainerRef}>
+        {/* عرض الشبكة */}
+        {viewMode === "grid" && (
+          <div className={`grid gap-2 h-full ${
+            participants.length === 1 ? "grid-cols-1" :
+            participants.length === 2 ? "grid-cols-2" :
+            participants.length <= 4 ? "grid-cols-2 grid-rows-2" :
+            "grid-cols-3 grid-rows-2"
+          }`}>
+            {participants.map((participant) => (
+              <VideoFrame 
+                key={participant.id} 
+                participant={participant}
+                className="cursor-pointer hover:ring-2 hover:ring-pink-400 transition-all"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* عرض المتحدث الرئيسي */}
+        {viewMode === "speaker" && (
+          <div className="flex h-full gap-4">
+            {/* المتحدث الرئيسي */}
+            <div className="flex-1">
+              <VideoFrame 
+                participant={pinnedParticipant ? 
+                  participants.find(p => p.id === pinnedParticipant)! :
+                  speakingParticipant || currentUser!
+                }
+                isMain={true}
+                className="h-full"
+              />
+            </div>
+
+            {/* الشريط الجانبي للمشاركين */}
+            <div className="w-48 flex flex-col gap-2">
+              {otherParticipants
+                .filter(p => p.id !== pinnedParticipant)
+                .map((participant) => (
+                <VideoFrame 
+                  key={participant.id} 
+                  participant={participant}
+                  className="h-24 cursor-pointer hover:ring-2 hover:ring-pink-400 transition-all"
+                />
+              ))}
             </div>
           </div>
         )}
-      </div>
+      </CardContent>
 
-      <div className={`absolute ${isMain ? "bottom-4 left-4" : "bottom-1 left-1"}`}>
-        <Badge className="bg-black/70 text-white font-arabic text-xs">{participant.name}</Badge>
+      {/* أدوات التحكم السفلية */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="bg-black/50 backdrop-blur-sm rounded-xl p-3">
+          <MediaControls
+            isInCall={isInCall}
+            isVoiceEnabled={currentUser?.isAudioEnabled}
+            isVideoEnabled={currentUser?.isVideoEnabled}
+            isScreenSharing={currentUser?.isScreenSharing}
+            onCallToggle={onCallToggle}
+            onVoiceToggle={onVoiceToggle}
+            onVideoToggle={onVideoToggle}
+            onScreenShareToggle={onScreenShareToggle}
+            layout="compact"
+            showLabels={false}
+            showStatus={false}
+          />
+        </div>
       </div>
-    </div>
+    </Card>
   )
 }
+
+export default VideoChat
