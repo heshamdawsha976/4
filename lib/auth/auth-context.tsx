@@ -6,8 +6,10 @@ import type { User } from "@/lib/types/user"
 
 interface AuthContextType {
   user: User | null
+  isGuest: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<boolean>
+  loginAsGuest: (nickname: string, country?: string) => Promise<boolean>
   register: (userData: RegisterData) => Promise<boolean>
   logout: () => void
   updateUser: (userData: Partial<User>) => void
