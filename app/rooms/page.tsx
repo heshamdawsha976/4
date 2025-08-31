@@ -19,6 +19,10 @@ import {
   BookOpen,
   Coffee,
   Gamepad2,
+  Mic,
+  Video,
+  Zap,
+  TrendingUp,
 } from "lucide-react"
 import Link from "next/link"
 
