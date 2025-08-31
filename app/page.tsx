@@ -199,7 +199,7 @@ export default function LandingPage() {
               </div>
               <h4 className="font-bold mb-3 font-arabic text-lg text-red-700">سوبر أدمن</h4>
               <p className="text-sm text-gray-600 font-arabic leading-relaxed">
-                ��لاحيات إدارية متقدمة مع إمكانية الإشراف
+                صلاحيات إدارية متقدمة مع إمكانية الإشراف
               </p>
             </CardContent>
           </Card>
@@ -222,7 +222,7 @@ export default function LandingPage() {
       <section className="container mx-auto px-4 py-20 bg-gradient-to-r from-pink-50 to-purple-50 rounded-3xl mx-4 shadow-xl">
         <div className="text-center mb-16">
           <h3 className="text-4xl font-bold mb-6 font-arabic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            لقطات من غرف الد��دشة
+            لقطات من غرف الدردشة
           </h3>
           <p className="text-gray-600 font-arabic text-xl">شاهد كيف تبدو تجربة الدردشة المتطورة في لقاء</p>
         </div>
@@ -311,15 +311,25 @@ export default function LandingPage() {
             <div className="relative z-10">
               <h3 className="text-4xl md:text-5xl font-bold mb-6 font-arabic">ابدأ رحلتك في لقاء اليوم</h3>
               <p className="text-xl mb-10 font-arabic opacity-90 max-w-3xl mx-auto leading-relaxed">
-                انضم إلى آلاف المستخدمين من جميع أنحاء العالم العربي واكتشف تجربة دردشة جديدة ومميزة مع نظام صلاحيات
+                انضم إلى آلاف المستخدمين من جميع أنحاء العالم العربي واكتشف تجربة دردشة جديدة ومميزة مع نظام صلاحيا��
                 متطور وخطط حصرية
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                <Link href="/register">
+                <GuestLoginDialog redirectTo="/rooms">
                   <Button
                     size="lg"
                     variant="secondary"
                     className="font-arabic text-lg px-10 py-4 bg-white text-purple-600 hover:bg-gray-100 shadow-xl transform hover:scale-105 transition-all duration-200"
+                  >
+                    <Users className="w-5 h-5 ml-2" />
+                    دخول سريع كزائر
+                  </Button>
+                </GuestLoginDialog>
+                <Link href="/register">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="font-arabic text-lg px-10 py-4 border-2 border-white text-white hover:bg-white hover:text-purple-600 bg-transparent shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
                     <ArrowRight className="w-5 h-5 ml-2" />
                     إنشاء حساب مجاني
