@@ -1,9 +1,9 @@
 import { Badge } from "@/components/ui/badge"
-import type { Role } from "@/lib/types"
-import { Crown, Shield, Star, Users, User } from "lucide-react"
+import { DEFAULT_ROLES, type Role } from "@/lib/types"
+import { Crown, Shield, Star, Users, User, UserCheck } from "lucide-react"
 
 interface RoleBadgeProps {
-  role: Role
+  role: Role | string
   size?: "sm" | "md" | "lg"
   showIcon?: boolean
 }
@@ -18,13 +18,20 @@ const getRoleIcon = (roleId: string) => {
       return Star
     case "moderator":
       return Users
+    case "guest":
+      return UserCheck
     default:
       return User
   }
 }
 
 export function RoleBadge({ role, size = "md", showIcon = true }: RoleBadgeProps) {
-  const Icon = getRoleIcon(role.id)
+  // إذا كان role من نوع string، ابحث عنه في DEFAULT_ROLES
+  const roleData = typeof role === "string"
+    ? DEFAULT_ROLES.find(r => r.id === role) || DEFAULT_ROLES.find(r => r.id === "member")!
+    : role
+
+  const Icon = getRoleIcon(roleData.id)
 
   const sizeClasses = {
     sm: "text-xs px-2 py-1",
@@ -42,13 +49,13 @@ export function RoleBadge({ role, size = "md", showIcon = true }: RoleBadgeProps
     <Badge
       className={`font-arabic font-medium ${sizeClasses[size]} border-0`}
       style={{
-        backgroundColor: role.color,
+        backgroundColor: roleData.color,
         color: "#ffffff",
-        boxShadow: `0 2px 8px ${role.color}40`,
+        boxShadow: `0 2px 8px ${roleData.color}40`,
       }}
     >
       {showIcon && <Icon className={`${iconSizes[size]} ml-1`} />}
-      {role.nameAr}
+      {roleData.nameAr}
     </Badge>
   )
 }
