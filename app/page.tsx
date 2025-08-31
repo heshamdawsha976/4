@@ -20,6 +20,12 @@ export default function LandingPage() {
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            <GuestLoginDialog redirectTo="/rooms">
+              <Button variant="outline" className="font-arabic border-green-200 text-green-700 hover:bg-green-50">
+                <Users className="w-4 h-4 ml-2" />
+                دخول سريع
+              </Button>
+            </GuestLoginDialog>
             <Link href="/login">
               <Button variant="ghost" className="font-arabic hover:bg-pink-50">
                 تسجيل الدخول
@@ -48,7 +54,7 @@ export default function LandingPage() {
             variant="secondary"
           >
             <Sparkles className="w-4 h-4 ml-2" />
-            تطبيق الدردشة الاجتماعي الأول في العالم العربي
+            تطبيق الدردشة الاجتماعي ��لأول في العالم العربي
           </Badge>
 
           <h2 className="text-6xl md:text-7xl font-bold mb-8 font-arabic text-balance leading-tight">
@@ -181,7 +187,7 @@ export default function LandingPage() {
               </div>
               <h4 className="font-bold mb-3 font-arabic text-lg text-amber-700">ماستر</h4>
               <p className="text-sm text-gray-600 font-arabic leading-relaxed">
-                صلاحيات كاملة لإدارة الغرفة وجميع المشاركين
+                صلاحيات كاملة لإدارة ��لغرفة وجميع المشاركين
               </p>
             </CardContent>
           </Card>
@@ -326,7 +332,7 @@ export default function LandingPage() {
                     className="font-arabic text-lg px-10 py-4 border-2 border-white text-white hover:bg-white hover:text-purple-600 bg-transparent shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
                     <Crown className="w-5 h-5 ml-2" />
-                    اكت��ف الخطط المميزة
+                    اكتشف الخطط المميزة
                   </Button>
                 </Link>
               </div>
