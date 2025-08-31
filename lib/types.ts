@@ -143,6 +143,18 @@ export const DEFAULT_ROLES: Role[] = [
       { id: "voice-chat", name: "Voice Chat", nameAr: "الدردشة الصوتية", description: "Participate in voice chat" },
     ],
   },
+  {
+    id: "guest",
+    name: "Guest",
+    nameAr: "زائر",
+    color: "#FFA726", // برتقالي فاتح
+    priority: 10,
+    permissions: [
+      { id: "send-messages", name: "Send Messages", nameAr: "إرسال الرسائل", description: "Send messages in chat" },
+      { id: "voice-chat", name: "Voice Chat", nameAr: "الدردشة الصوتية", description: "Participate in voice chat" },
+      { id: "listen-only", name: "Listen Only", nameAr: "الاستماع فقط", description: "Listen to voice chat" },
+    ],
+  },
 ]
 
 // خطط الغرف
