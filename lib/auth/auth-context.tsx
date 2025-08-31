@@ -37,9 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const loadUser = async () => {
       try {
         const savedUser = localStorage.getItem("liqaa_user")
+        const savedGuestStatus = localStorage.getItem("liqaa_guest")
         if (savedUser) {
           const userData = JSON.parse(savedUser)
           setUser(userData)
+          setIsGuest(savedGuestStatus === "true")
         }
       } catch (error) {
         console.error("Error loading user:", error)
