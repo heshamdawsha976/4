@@ -353,13 +353,16 @@ export default function RoomsPage() {
 
                     <div className="flex gap-2">
                       <GuestLoginDialog redirectTo={`/room/${room.id}`}>
-                        <Button className="flex-1 font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
+                        <Button className="flex-1 font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
                           <MessageCircle className="w-4 h-4 ml-2" />
                           دخول كزائر
                         </Button>
                       </GuestLoginDialog>
-                      <Button variant="outline" size="icon" className="border-pink-200 hover:bg-pink-50 bg-transparent">
-                        <Heart className="w-4 h-4 text-pink-600" />
+                      <Button variant="outline" size="icon" className="border-pink-200 hover:bg-pink-50 bg-transparent hover:scale-110 transition-transform">
+                        <Heart className="w-4 h-4 text-pink-600 hover:text-pink-700" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="border-blue-200 hover:bg-blue-50 bg-transparent hover:scale-110 transition-transform">
+                        <Star className="w-4 h-4 text-blue-600 hover:text-blue-700" />
                       </Button>
                     </div>
 
