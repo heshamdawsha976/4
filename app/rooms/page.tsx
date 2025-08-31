@@ -173,10 +173,16 @@ export default function RoomsPage() {
               />
             </div>
           </div>
-          <Button variant="outline" className="font-arabic border-pink-200 hover:bg-pink-50 bg-transparent">
-            <Filter className="w-4 h-4 ml-2" />
-            تصفية
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="font-arabic border-green-200 text-green-700 hover:bg-green-50 bg-transparent">
+              <div className="w-2 h-2 bg-green-500 rounded-full ml-2 animate-pulse"></div>
+              مباشر فقط
+            </Button>
+            <Button variant="outline" className="font-arabic border-pink-200 hover:bg-pink-50 bg-transparent">
+              <Filter className="w-4 h-4 ml-2" />
+              تصفية
+            </Button>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
