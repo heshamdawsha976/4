@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Mic, Video, MessageCircle, Heart, Globe, Star, Shield, Crown, Sparkles, ArrowRight, Play } from "lucide-react"
+import { GuestLoginDialog } from "@/components/auth/guest-login"
+import { Mic, Video, MessageCircle, Heart, Globe, Star, Shield, Crown, Sparkles, ArrowRight, Play, Users } from "lucide-react"
 import Link from "next/link"
 
 export default function LandingPage() {
@@ -325,7 +326,7 @@ export default function LandingPage() {
                     className="font-arabic text-lg px-10 py-4 border-2 border-white text-white hover:bg-white hover:text-purple-600 bg-transparent shadow-xl transform hover:scale-105 transition-all duration-200"
                   >
                     <Crown className="w-5 h-5 ml-2" />
-                    اكتشف الخطط المميزة
+                    اكت��ف الخطط المميزة
                   </Button>
                 </Link>
               </div>
