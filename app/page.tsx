@@ -54,7 +54,7 @@ export default function LandingPage() {
             variant="secondary"
           >
             <Sparkles className="w-4 h-4 ml-2" />
-            تطبيق الدردشة الاجتماعي ��لأول في العالم العربي
+            تطبيق الدردشة الاجتماعي الأول في العالم العربي
           </Badge>
 
           <h2 className="text-6xl md:text-7xl font-bold mb-8 font-arabic text-balance leading-tight">
@@ -71,7 +71,7 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center mb-12">
-            <Link href="/rooms">
+            <GuestLoginDialog redirectTo="/rooms">
               <Button
                 size="lg"
                 className="font-arabic text-lg px-10 py-4 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
@@ -79,7 +79,7 @@ export default function LandingPage() {
                 <ArrowRight className="w-5 h-5 ml-2" />
                 ابدأ الآن مجاناً
               </Button>
-            </Link>
+            </GuestLoginDialog>
             <Button
               size="lg"
               variant="outline"
@@ -187,7 +187,7 @@ export default function LandingPage() {
               </div>
               <h4 className="font-bold mb-3 font-arabic text-lg text-amber-700">ماستر</h4>
               <p className="text-sm text-gray-600 font-arabic leading-relaxed">
-                صلاحيات كاملة لإدارة ��لغرفة وجميع المشاركين
+                صلاحيات كاملة لإدارة الغرفة وجميع المشاركين
               </p>
             </CardContent>
           </Card>
@@ -199,7 +199,7 @@ export default function LandingPage() {
               </div>
               <h4 className="font-bold mb-3 font-arabic text-lg text-red-700">سوبر أدمن</h4>
               <p className="text-sm text-gray-600 font-arabic leading-relaxed">
-                صلاحيات إدارية متقدمة مع إمكانية الإشراف
+                ��لاحيات إدارية متقدمة مع إمكانية الإشراف
               </p>
             </CardContent>
           </Card>
@@ -222,7 +222,7 @@ export default function LandingPage() {
       <section className="container mx-auto px-4 py-20 bg-gradient-to-r from-pink-50 to-purple-50 rounded-3xl mx-4 shadow-xl">
         <div className="text-center mb-16">
           <h3 className="text-4xl font-bold mb-6 font-arabic bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            لقطات من غرف الدردشة
+            لقطات من غرف الد��دشة
           </h3>
           <p className="text-gray-600 font-arabic text-xl">شاهد كيف تبدو تجربة الدردشة المتطورة في لقاء</p>
         </div>
