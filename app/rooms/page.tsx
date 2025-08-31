@@ -297,21 +297,42 @@ export default function RoomsPage() {
                     {/* Active Users Preview */}
                     <div className="mb-4">
                       <div className="text-xs text-gray-500 font-arabic mb-2">المتحدثون النشطون:</div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {room.activeUsers.slice(0, 3).map((user, index) => (
-                          <div key={index} className="flex items-center gap-1 bg-pink-50 rounded-lg px-2 py-1">
+                          <div key={index} className="flex items-center gap-1 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg px-2 py-1 border border-pink-100">
                             <span className="text-sm">{user.avatar}</span>
-                            <span className="text-xs font-arabic">{user.name}</span>
+                            <span className="text-xs font-arabic font-medium">{user.name}</span>
                             {user.role === "admin" && <Shield className="w-3 h-3 text-blue-500" />}
                             {user.role === "super_admin" && <Crown className="w-3 h-3 text-red-500" />}
+                            {user.role === "master" && <Crown className="w-3 h-3 text-yellow-500" />}
                           </div>
                         ))}
                         {room.activeUsers.length > 3 && (
-                          <span className="text-xs text-gray-500 font-arabic">
-                            +{room.activeUsers.length - 3} آخرين
-                          </span>
+                          <div className="flex items-center gap-1 bg-gray-100 rounded-lg px-2 py-1">
+                            <span className="text-xs text-gray-500 font-arabic">
+                              +{room.activeUsers.length - 3} آخرين
+                            </span>
+                          </div>
                         )}
                       </div>
+                    </div>
+
+                    {/* Room Activity Indicators */}
+                    <div className="mb-4 flex items-center gap-2 text-xs">
+                      <div className="flex items-center gap-1 bg-blue-50 rounded-full px-2 py-1">
+                        <MessageCircle className="w-3 h-3 text-blue-600" />
+                        <span className="font-arabic text-blue-700">نشط</span>
+                      </div>
+                      <div className="flex items-center gap-1 bg-purple-50 rounded-full px-2 py-1">
+                        <Mic className="w-3 h-3 text-purple-600" />
+                        <span className="font-arabic text-purple-700">صوتي</span>
+                      </div>
+                      {Math.random() > 0.5 && (
+                        <div className="flex items-center gap-1 bg-green-50 rounded-full px-2 py-1">
+                          <Video className="w-3 h-3 text-green-600" />
+                          <span className="font-arabic text-green-700">مرئي</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-2">
