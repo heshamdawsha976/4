@@ -55,7 +55,7 @@ const rooms = [
     language: "العربية",
     tags: ["شعر", "أدب", "إبداع"],
     activeUsers: [
-      { name: "عمر", role: "member", avatar: "👨���🎓" },
+      { name: "عمر", role: "member", avatar: "👨‍🎓" },
       { name: "زينب", role: "admin", avatar: "👩‍🏫" },
     ],
   },
@@ -309,12 +309,12 @@ export default function RoomsPage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <Link href={`/room/${room.id}`} className="flex-1">
-                        <Button className="w-full font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
+                      <GuestLoginDialog redirectTo={`/room/${room.id}`}>
+                        <Button className="flex-1 font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
                           <MessageCircle className="w-4 h-4 ml-2" />
                           دخول كزائر
                         </Button>
-                      </Link>
+                      </GuestLoginDialog>
                       <Button variant="outline" size="icon" className="border-pink-200 hover:bg-pink-50 bg-transparent">
                         <Heart className="w-4 h-4 text-pink-600" />
                       </Button>
