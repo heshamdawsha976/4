@@ -202,7 +202,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     setUser(null)
+    setIsGuest(false)
     localStorage.removeItem("liqaa_user")
+    localStorage.removeItem("liqaa_guest")
   }
 
   const updateUser = (userData: Partial<User>) => {
