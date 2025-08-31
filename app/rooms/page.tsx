@@ -55,7 +55,7 @@ const rooms = [
     language: "العربية",
     tags: ["شعر", "أدب", "إبداع"],
     activeUsers: [
-      { name: "عمر", role: "member", avatar: "👨‍🎓" },
+      { name: "عمر", role: "member", avatar: "👨���🎓" },
       { name: "زينب", role: "admin", avatar: "👩‍🏫" },
     ],
   },
@@ -132,6 +132,12 @@ export default function RoomsPage() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
+            <GuestLoginDialog>
+              <Button className="font-arabic bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg">
+                <Users className="w-4 h-4 ml-2" />
+                دخول سريع
+              </Button>
+            </GuestLoginDialog>
             <Button className="font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 shadow-lg">
               <Plus className="w-4 h-4 ml-2" />
               إنشاء غرفة
@@ -306,7 +312,7 @@ export default function RoomsPage() {
                       <Link href={`/room/${room.id}`} className="flex-1">
                         <Button className="w-full font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
                           <MessageCircle className="w-4 h-4 ml-2" />
-                          دخول ��زائر
+                          دخول كزائر
                         </Button>
                       </Link>
                       <Button variant="outline" size="icon" className="border-pink-200 hover:bg-pink-50 bg-transparent">
