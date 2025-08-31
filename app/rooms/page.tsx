@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { GuestLoginDialog } from "@/components/auth/guest-login"
 import {
   MessageCircle,
   Users,
@@ -305,7 +306,7 @@ export default function RoomsPage() {
                       <Link href={`/room/${room.id}`} className="flex-1">
                         <Button className="w-full font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
                           <MessageCircle className="w-4 h-4 ml-2" />
-                          دخول كزائر
+                          دخول ��زائر
                         </Button>
                       </Link>
                       <Button variant="outline" size="icon" className="border-pink-200 hover:bg-pink-50 bg-transparent">
