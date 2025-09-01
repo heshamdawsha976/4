@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { RoleBadge } from "@/components/ui/role-badge"
 import { RoomPlanBadge } from "@/components/ui/room-plan-badge"
 import { Send, Users, Crown, Shield, Star, Mic, MicOff, Video, VideoOff, Phone, PhoneOff } from "lucide-react"
-import type { Room, User, Message, UserRole } from "@/lib/types"
+import type { Room, User, Message } from "@/lib/types"
 
 // Mock data
 const mockRooms: Room[] = [

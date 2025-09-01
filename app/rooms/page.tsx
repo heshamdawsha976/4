@@ -1,94 +1,84 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ROOM_PLANS, type Room } from "@/lib/types"
 import {
-  MessageCircle,
-  Users,
-  Crown,
-  Shield,
-  Star,
-  Globe,
-  Search,
-  Plus,
-  Filter,
-  Sparkles,
-  Heart,
-  Music,
-  BookOpen,
-  Coffee,
-  Gamepad2,
+  MessageCircle, Users, Crown, Shield, Star, Globe, Search, Plus, Filter,
+  Sparkles, Heart, Music, BookOpen, Coffee, Gamepad2, TrendingUp
 } from "lucide-react"
 import Link from "next/link"
 
-// Mock data for rooms
-const rooms = [
+// بيانات تجريبية للغرف
+const mockRooms: Room[] = [
   {
     id: "1",
     name: "غرفة الثقافة العربية",
     description: "مناقشات ثقافية وأدبية عن التراث العربي",
-    category: "ثقافة",
-    participants: 125,
-    maxParticipants: 200,
-    isLive: true,
     plan: "gold",
-    owner: "أحمد المغربي",
-    language: "العربية",
-    tags: ["ثقافة", "أدب", "تراث"],
-    activeUsers: [
-      { name: "فاطمة", role: "admin", avatar: "👩" },
-      { name: "محمد", role: "member", avatar: "👨" },
-      { name: "عائشة", role: "super_admin", avatar: "👩‍🦱" },
-    ],
+    ownerId: "owner1",
+    isActive: true,
+    isPrivate: false,
+    maxUsers: 500,
+    currentUsers: 245,
+    createdAt: new Date(),
+    settings: {
+      allowGuests: true,
+      requireApproval: false,
+      allowVoiceChat: true,
+      allowVideoChat: true,
+      allowFileSharing: true,
+      moderationEnabled: true,
+      welcomeMessage: "أهلاً وسهلاً بكم"
+    },
+    participants: []
   },
   {
-    id: "2",
-    name: "غرفة الشعر والأدب",
+    id: "2", 
+    name: "مقهى الشعر والأدب",
     description: "أمسيات شعرية ومناقشات أدبية",
-    category: "أدب",
-    participants: 89,
-    maxParticipants: 150,
-    isLive: true,
     plan: "premium",
-    owner: "ليلى اللبنانية",
-    language: "العربية",
-    tags: ["شعر", "أدب", "إبداع"],
-    activeUsers: [
-      { name: "عمر", role: "member", avatar: "👨‍🎓" },
-      { name: "زينب", role: "admin", avatar: "👩‍🏫" },
-    ],
+    ownerId: "owner2",
+    isActive: true,
+    isPrivate: false,
+    maxUsers: 1000,
+    currentUsers: 189,
+    createdAt: new Date(),
+    settings: {
+      allowGuests: true,
+      requireApproval: false,
+      allowVoiceChat: true,
+      allowVideoChat: true,
+      allowFileSharing: true,
+      moderationEnabled: true
+    },
+    participants: []
   },
   {
     id: "3",
-    name: "مقهى الأصدقاء",
-    description: "دردشة ودية وأحاديث عامة",
-    category: "عام",
-    participants: 67,
-    maxParticipants: 100,
-    isLive: true,
+    name: "نقاشات التكنولوجيا",
+    description: "مناقشات حول التقنية والذكاء الاصطناعي",
     plan: "silver",
-    owner: "سارة المصرية",
-    language: "العربية",
-    tags: ["دردشة", "أصدقاء", "ترفيه"],
-    activeUsers: [
-      { name: "خالد", role: "member", avatar: "👨‍💼" },
-      { name: "نور", role: "member", avatar: "👩‍💻" },
-    ],
-  },
-  {
-    id: "4",
-    name: "غرفة الألعاب",
-    description: "مناقشات حول الألعاب والتكنولوجيا",
-    category: "ألعاب",
-    participants: 45,
-    maxParticipants: 80,
-    isLive: true,
-    plan: "basic",
-    owner: "يوسف السعودي",
-    language: "العربية",
-    tags: ["ألعاب", "تكنولوجيا", "مرح"],
-    activeUsers: [{ name: "أمير", role: "member", avatar: "👨‍🎮" }],
-  },
+    ownerId: "owner3", 
+    isActive: true,
+    isPrivate: false,
+    maxUsers: 200,
+    currentUsers: 156,
+    createdAt: new Date(),
+    settings: {
+      allowGuests: true,
+      requireApproval: false,
+      allowVoiceChat: true,
+      allowVideoChat: false,
+      allowFileSharing: false,
+      moderationEnabled: true
+    },
+    participants: []
+  }
 ]
 
 const categories = [
@@ -100,21 +90,35 @@ const categories = [
   { name: "ألعاب", icon: Gamepad2, count: 13 },
 ]
 
-const planColors = {
-  gold: "from-yellow-400 to-amber-500",
-  premium: "from-purple-500 to-pink-500",
-  silver: "from-gray-400 to-gray-500",
-  basic: "from-blue-400 to-indigo-500",
-}
-
-const planBadges = {
-  gold: { label: "ذهبية", color: "bg-yellow-100 text-yellow-800" },
-  premium: { label: "مميزة", color: "bg-purple-100 text-purple-800" },
-  silver: { label: "فضية", color: "bg-gray-100 text-gray-800" },
-  basic: { label: "أساسية", color: "bg-blue-100 text-blue-800" },
-}
-
 export default function RoomsPage() {
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("الكل")
+
+  useEffect(() => {
+    setRooms(mockRooms)
+  }, [])
+
+  const filteredRooms = rooms.filter(room => {
+    const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         room.description.toLowerCase().includes(searchTerm.toLowerCase())
+    return matchesSearch
+  })
+
+  const getPlanBadge = (plan: string) => {
+    const planData = ROOM_PLANS.find(p => p.id === plan)
+    if (!planData) return null
+
+    return (
+      <Badge 
+        className="font-arabic text-white"
+        style={{ backgroundColor: planData.color }}
+      >
+        {planData.nameAr}
+      </Badge>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
       {/* Header */}
@@ -162,6 +166,8 @@ export default function RoomsPage() {
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 placeholder="ابحث عن غرفة..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="font-arabic pr-12 bg-white/80 backdrop-blur-sm border-pink-200 focus:border-pink-400"
               />
             </div>
@@ -183,7 +189,12 @@ export default function RoomsPage() {
                 {categories.map((category) => (
                   <button
                     key={category.name}
-                    className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-pink-50 transition-colors text-right"
+                    onClick={() => setSelectedCategory(category.name)}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors text-right ${
+                      selectedCategory === category.name 
+                        ? "bg-pink-100 text-pink-700" 
+                        : "hover:bg-pink-50"
+                    }`}
                   >
                     <div className="flex items-center gap-3">
                       <category.icon className="w-5 h-5 text-pink-600" />
@@ -196,33 +207,12 @@ export default function RoomsPage() {
                 ))}
               </CardContent>
             </Card>
-
-            {/* Quick Stats */}
-            <Card className="bg-white/80 backdrop-blur-sm border-pink-100 shadow-lg mt-6">
-              <CardHeader>
-                <CardTitle className="font-arabic text-lg">إحصائيات سريعة</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-pink-600 mb-1">156</div>
-                  <div className="text-sm text-gray-600 font-arabic">غرفة نشطة</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">2.3K</div>
-                  <div className="text-sm text-gray-600 font-arabic">مستخدم متصل</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-indigo-600 mb-1">24/7</div>
-                  <div className="text-sm text-gray-600 font-arabic">متاح دائماً</div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Rooms Grid */}
           <div className="lg:col-span-3">
             <div className="grid md:grid-cols-2 gap-6">
-              {rooms.map((room) => (
+              {filteredRooms.map((room) => (
                 <Card
                   key={room.id}
                   className="bg-white/80 backdrop-blur-sm border-pink-100 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
@@ -233,35 +223,21 @@ export default function RoomsPage() {
                         <CardTitle className="font-arabic text-lg mb-2 text-balance">{room.name}</CardTitle>
                         <p className="text-sm text-gray-600 font-arabic leading-relaxed">{room.description}</p>
                       </div>
-                      <div
-                        className={`w-12 h-12 bg-gradient-to-br ${planColors[room.plan]} rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 mr-3`}
-                      >
-                        {room.plan === "gold" && <Crown className="w-6 h-6 text-white" />}
-                        {room.plan === "premium" && <Sparkles className="w-6 h-6 text-white" />}
-                        {room.plan === "silver" && <Shield className="w-6 h-6 text-white" />}
-                        {room.plan === "basic" && <Star className="w-6 h-6 text-white" />}
+                      <div className="flex-shrink-0 mr-3">
+                        {getPlanBadge(room.plan)}
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 mb-3">
-                      <Badge className={planBadges[room.plan].color}>{planBadges[room.plan].label}</Badge>
-                      <Badge variant="outline" className="font-arabic">
-                        {room.category}
-                      </Badge>
-                      {room.isLive && (
-                        <Badge className="bg-green-100 text-green-800">
+                      {room.isActive && (
+                        <Badge className="bg-green-100 text-green-800 font-arabic">
                           <div className="w-2 h-2 bg-green-500 rounded-full ml-1 animate-pulse"></div>
                           مباشر
                         </Badge>
                       )}
-                    </div>
-
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {room.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs bg-pink-50 text-pink-700">
-                          {tag}
-                        </Badge>
-                      ))}
+                      <Badge variant="outline" className="font-arabic">
+                        {room.settings.allowGuests ? "يسمح بالضيوف" : "أعضاء فقط"}
+                      </Badge>
                     </div>
                   </CardHeader>
 
@@ -271,33 +247,13 @@ export default function RoomsPage() {
                         <div className="flex items-center gap-1">
                           <Users className="w-4 h-4" />
                           <span className="font-arabic">
-                            {room.participants}/{room.maxParticipants}
+                            {room.currentUsers}/{room.maxUsers}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Globe className="w-4 h-4" />
-                          <span className="font-arabic">{room.language}</span>
+                          <span className="font-arabic">عربي</span>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Active Users Preview */}
-                    <div className="mb-4">
-                      <div className="text-xs text-gray-500 font-arabic mb-2">المتحدثون النشطون:</div>
-                      <div className="flex items-center gap-2">
-                        {room.activeUsers.slice(0, 3).map((user, index) => (
-                          <div key={index} className="flex items-center gap-1 bg-pink-50 rounded-lg px-2 py-1">
-                            <span className="text-sm">{user.avatar}</span>
-                            <span className="text-xs font-arabic">{user.name}</span>
-                            {user.role === "admin" && <Shield className="w-3 h-3 text-blue-500" />}
-                            {user.role === "super_admin" && <Crown className="w-3 h-3 text-red-500" />}
-                          </div>
-                        ))}
-                        {room.activeUsers.length > 3 && (
-                          <span className="text-xs text-gray-500 font-arabic">
-                            +{room.activeUsers.length - 3} آخرين
-                          </span>
-                        )}
                       </div>
                     </div>
 
@@ -305,7 +261,7 @@ export default function RoomsPage() {
                       <Link href={`/room/${room.id}`} className="flex-1">
                         <Button className="w-full font-arabic bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
                           <MessageCircle className="w-4 h-4 ml-2" />
-                          دخول كزائر
+                          دخول الغرفة
                         </Button>
                       </Link>
                       <Button variant="outline" size="icon" className="border-pink-200 hover:bg-pink-50 bg-transparent">
@@ -313,7 +269,9 @@ export default function RoomsPage() {
                       </Button>
                     </div>
 
-                    <div className="mt-3 text-xs text-gray-500 font-arabic text-center">مالك الغرفة: {room.owner}</div>
+                    <div className="mt-3 text-xs text-gray-500 font-arabic text-center">
+                      مالك الغرفة: د. أحمد الثقافي
+                    </div>
                   </CardContent>
                 </Card>
               ))}
