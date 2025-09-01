@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { RoleBadge } from "@/components/ui/role-badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DEFAULT_ROLES, type Room, type UserRole } from "@/lib/types"
+import { ROLE_DEFINITIONS, type Room, type UserRole } from "@/lib/types"
 import { Search, UserPlus, Crown, Trash2 } from "lucide-react"
 
 interface ParticipantsManagerProps {
@@ -23,39 +23,25 @@ export function ParticipantsManager({ open, onOpenChange, room, onUpdateRoom }: 
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedRole, setSelectedRole] = useState<string>("")
 
-  // دمج جميع المشاركين (المالك + المشرفين + الأعضاء)
-  const allParticipants: UserRole[] = [
-    {
-      user: room.owner,
-      role: DEFAULT_ROLES[0], // Master role
-      assignedAt: room.createdAt,
-      assignedBy: room.owner.id,
-    },
-    ...room.moderators,
-    ...room.participants,
-  ]
+  // استخدام المشاركين من الغرفة مباشرة
+  const allParticipants = room.participants || []
 
   const filteredParticipants = allParticipants.filter(
-    (participant) =>
-      participant.user.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedRole === "" || participant.role.id === selectedRole),
+    (participant) => {
+      const matchesSearch = participant.user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           participant.user.username?.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesRole = selectedRole === "" || participant.role === selectedRole
+      return matchesSearch && matchesRole
+    }
   )
 
   const handleRoleChange = (participantId: string, newRoleId: string) => {
-    const newRole = DEFAULT_ROLES.find((role) => role.id === newRoleId)
-    if (!newRole) return
-
-    const updatedModerators = room.moderators.map((mod) =>
-      mod.user.id === participantId ? { ...mod, role: newRole } : mod,
-    )
-
     const updatedParticipants = room.participants.map((part) =>
-      part.user.id === participantId ? { ...part, role: newRole } : part,
+      part.user.id === participantId ? { ...part, role: newRoleId as UserRole } : part,
     )
 
     const updatedRoom: Room = {
       ...room,
-      moderators: updatedModerators,
       participants: updatedParticipants,
     }
 
@@ -63,19 +49,18 @@ export function ParticipantsManager({ open, onOpenChange, room, onUpdateRoom }: 
   }
 
   const handleRemoveParticipant = (participantId: string) => {
-    if (participantId === room.owner.id) return // لا يمكن حذف المالك
+    if (participantId === room.ownerId) return // لا يمكن حذف المالك
 
     const updatedRoom: Room = {
       ...room,
-      moderators: room.moderators.filter((mod) => mod.user.id !== participantId),
       participants: room.participants.filter((part) => part.user.id !== participantId),
     }
 
     onUpdateRoom(updatedRoom)
   }
 
-  const getParticipantActions = (participant: UserRole) => {
-    const isOwner = participant.user.id === room.owner.id
+  const getParticipantActions = (participant: RoomParticipant) => {
+    const isOwner = participant.user.id === room.ownerId
     const canEdit = !isOwner
     const canRemove = !isOwner
 
@@ -109,8 +94,8 @@ export function ParticipantsManager({ open, onOpenChange, room, onUpdateRoom }: 
                 <SelectItem value="" className="font-arabic">
                   جميع الأدوار
                 </SelectItem>
-                {DEFAULT_ROLES.map((role) => (
-                  <SelectItem key={role.id} value={role.id} className="font-arabic">
+                {Object.entries(ROLE_DEFINITIONS).map(([roleKey, role]) => (
+                  <SelectItem key={roleKey} value={roleKey} className="font-arabic">
                     {role.nameAr}
                   </SelectItem>
                 ))}
@@ -131,15 +116,13 @@ export function ParticipantsManager({ open, onOpenChange, room, onUpdateRoom }: 
                   <SelectValue placeholder="اختر الدور" />
                 </SelectTrigger>
                 <SelectContent>
-                  {DEFAULT_ROLES.slice(1).map(
-                    (
-                      role, // استثناء دور Master
-                    ) => (
-                      <SelectItem key={role.id} value={role.id} className="font-arabic">
+                  {Object.entries(ROLE_DEFINITIONS)
+                    .filter(([roleKey]) => roleKey !== "master") // استثناء دور Master
+                    .map(([roleKey, role]) => (
+                      <SelectItem key={roleKey} value={roleKey} className="font-arabic">
                         {role.nameAr}
                       </SelectItem>
-                    ),
-                  )}
+                    ))}
                 </SelectContent>
               </Select>
               <Button className="font-arabic">إضافة</Button>
@@ -167,8 +150,8 @@ export function ParticipantsManager({ open, onOpenChange, room, onUpdateRoom }: 
 
                       <div>
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium font-arabic">{participant.user.name}</span>
-                          {participant.user.id === room.owner.id && <Crown className="w-4 h-4 text-yellow-500" />}
+                          <span className="font-medium font-arabic">{participant.user.displayName}</span>
+                          {participant.user.id === room.ownerId && <Crown className="w-4 h-4 text-yellow-500" />}
                           {participant.user.country && (
                             <Badge variant="outline" className="text-xs font-arabic">
                               {participant.user.country}
@@ -178,7 +161,7 @@ export function ParticipantsManager({ open, onOpenChange, room, onUpdateRoom }: 
                         <div className="flex items-center gap-2">
                           <RoleBadge role={participant.role} size="sm" />
                           <span className="text-xs text-muted-foreground font-arabic">
-                            انضم في {participant.assignedAt.toLocaleDateString("ar")}
+                            انضم في {participant.joinedAt.toLocaleDateString("ar")}
                           </span>
                         </div>
                       </div>
@@ -187,15 +170,17 @@ export function ParticipantsManager({ open, onOpenChange, room, onUpdateRoom }: 
                     <div className="flex items-center gap-2">
                       {actions.canEdit && (
                         <Select
-                          value={participant.role.id}
+                          value={participant.role}
                           onValueChange={(value) => handleRoleChange(participant.user.id, value)}
                         >
                           <SelectTrigger className="w-32 h-8 font-arabic">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {DEFAULT_ROLES.slice(1).map((role) => (
-                              <SelectItem key={role.id} value={role.id} className="font-arabic">
+                            {Object.entries(ROLE_DEFINITIONS)
+                              .filter(([roleKey]) => roleKey !== "master")
+                              .map(([roleKey, role]) => (
+                              <SelectItem key={roleKey} value={roleKey} className="font-arabic">
                                 {role.nameAr}
                               </SelectItem>
                             ))}

@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { RoleBadge } from "@/components/ui/role-badge"
 import { RoomPlanBadge } from "@/components/ui/room-plan-badge"
 import { Send, Users, Crown, Shield, Star, Mic, MicOff, Video, VideoOff, Phone, PhoneOff } from "lucide-react"
-import type { Room, User, Message } from "@/lib/types"
+import type { Message, User, Room, UserRole } from "@/lib/types"
 
 // Mock data
 const mockRooms: Room[] = [
@@ -172,7 +172,7 @@ export default function ChatPage() {
     switch (role) {
       case "master":
         return <Crown className="h-4 w-4" />
-      case "super_admin":
+      case "super_admin": 
         return <Shield className="h-4 w-4" />
       case "admin":
         return <Star className="h-4 w-4" />

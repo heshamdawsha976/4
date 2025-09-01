@@ -10,7 +10,7 @@ import { RoleBadge } from "@/components/ui/role-badge"
 import { CreateRoomDialog } from "@/components/rooms/create-room-dialog"
 import { RoomSettingsDialog } from "@/components/rooms/room-settings-dialog"
 import { ParticipantsManager } from "@/components/rooms/participants-manager"
-import { ROOM_PLANS, DEFAULT_ROLES, type Room } from "@/lib/types"
+import { ROOM_PLANS, ROLE_DEFINITIONS, type Room } from "@/lib/types"
 import { Plus, Search, Settings, Users, Eye, Trash2, Crown, MessageCircle, Mic, Video, Globe } from "lucide-react"
 
 // بيانات تجريبية للغرف
@@ -19,31 +19,32 @@ const mockRooms: Room[] = [
     id: "1",
     name: "غرفة الثقافة العربية",
     description: "مناقشات ثقافية وأدبية",
-    plan: ROOM_PLANS[0], // Premium
-    owner: { id: "1", name: "أحمد محمد", country: "مصر" },
-    moderators: [
-      {
-        user: { id: "2", name: "فاطمة أحمد", country: "المغرب" },
-        role: DEFAULT_ROLES[1], // Super Admin
-        assignedAt: new Date(),
-        assignedBy: "1",
-      },
-    ],
+    plan: "premium",
+    ownerId: "1",
     participants: [
       {
-        user: { id: "3", name: "محمد علي", country: "السعودية" },
-        role: DEFAULT_ROLES[4], // Member
-        assignedAt: new Date(),
-        assignedBy: "1",
+        userId: "2",
+        user: { id: "2", username: "fatima", displayName: "فاطمة أحمد", country: "المغرب", role: "super_admin", isOnline: true, joinedAt: new Date(), lastSeen: new Date() },
+        role: "super_admin",
+        joinedAt: new Date(),
+        isMuted: false,
+        isSpeaking: false,
+        permissions: { canSpeak: true, canVideo: true, canChat: true, canInvite: true, canKick: true, canMute: true, canManageRoom: false }
       },
       {
-        user: { id: "4", name: "ليلى حسن", country: "لبنان" },
-        role: DEFAULT_ROLES[3], // Moderator
-        assignedAt: new Date(),
-        assignedBy: "1",
+        userId: "3", 
+        user: { id: "3", username: "mohammed", displayName: "محمد علي", country: "السعودية", role: "member", isOnline: true, joinedAt: new Date(), lastSeen: new Date() },
+        role: "member",
+        joinedAt: new Date(),
+        isMuted: false,
+        isSpeaking: false,
+        permissions: { canSpeak: true, canVideo: true, canChat: true, canInvite: false, canKick: false, canMute: false, canManageRoom: false }
       },
     ],
     isActive: true,
+    isPrivate: false,
+    maxUsers: 1000,
+    currentUsers: 245,
     createdAt: new Date(),
     settings: {
       allowGuests: true,
@@ -53,6 +54,7 @@ const mockRooms: Room[] = [
       allowVoiceChat: true,
       allowVideoChat: true,
       allowFileSharing: true,
+      moderationEnabled: true,
     },
   },
   {

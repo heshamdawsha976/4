@@ -1,4 +1,4 @@
-// خادم WebSocket للاتصال المباشر
+// خادم WebSocket للاتصال المباشر - مبسط ومحسن
 const WebSocket = require('ws')
 const http = require('http')
 
@@ -13,17 +13,24 @@ class LeqaaWebSocketServer {
 
   start() {
     this.server = http.createServer()
-    this.wss = new WebSocket.Server({ server: this.server })
+    this.wss = new WebSocket.Server({ 
+      server: this.server,
+      perMessageDeflate: false
+    })
 
     this.wss.on('connection', (ws) => {
-      console.log('[Leqaa] New WebSocket connection')
+      console.log('[Leqaa] اتصال WebSocket جديد')
       
       ws.on('message', (data) => {
         try {
           const message = JSON.parse(data.toString())
           this.handleMessage(ws, message)
         } catch (error) {
-          console.error('[Leqaa] Error parsing message:', error)
+          console.error('[Leqaa] خطأ في تحليل الرسالة:', error)
+          ws.send(JSON.stringify({
+            type: 'error',
+            payload: { message: 'رسالة غير صحيحة' }
+          }))
         }
       })
 
@@ -32,12 +39,18 @@ class LeqaaWebSocketServer {
       })
 
       ws.on('error', (error) => {
-        console.error('[Leqaa] WebSocket error:', error)
+        console.error('[Leqaa] خطأ WebSocket:', error)
       })
+
+      // إرسال رسالة ترحيب
+      ws.send(JSON.stringify({
+        type: 'connected',
+        payload: { message: 'مرحباً بك في لقاء' }
+      }))
     })
 
     this.server.listen(this.port, () => {
-      console.log(`[Leqaa] WebSocket server running on port ${this.port}`)
+      console.log(`[Leqaa] خادم WebSocket يعمل على المنفذ ${this.port}`)
     })
   }
 
@@ -57,22 +70,28 @@ class LeqaaWebSocketServer {
         this.handleSendMessage(ws, payload)
         break
       
-      case 'webrtc-offer':
-      case 'webrtc-answer':
-      case 'ice-candidate':
-        this.handleWebRTCSignaling(ws, message)
-        break
-      
       case 'media-state-changed':
         this.handleMediaStateChange(ws, payload)
         break
+
+      case 'ping':
+        ws.send(JSON.stringify({ type: 'pong', payload: {} }))
+        break
       
       default:
-        console.log('[Leqaa] Unknown message type:', type)
+        console.log('[Leqaa] نوع رسالة غير معروف:', type)
     }
   }
 
   handleJoinRoom(ws, { roomId, user }) {
+    if (!roomId || !user) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        payload: { message: 'بيانات غير مكتملة' }
+      }))
+      return
+    }
+
     // إضافة المستخدم للغرفة
     if (!this.rooms.has(roomId)) {
       this.rooms.set(roomId, new Set())
@@ -112,7 +131,7 @@ class LeqaaWebSocketServer {
       }
     }))
 
-    console.log(`[Leqaa] User ${user.displayName} joined room ${roomId}`)
+    console.log(`[Leqaa] المستخدم ${user.displayName} انضم للغرفة ${roomId}`)
   }
 
   handleLeaveRoom(ws, { roomId, userId }) {
@@ -122,6 +141,7 @@ class LeqaaWebSocketServer {
       
       if (roomConnections.size === 0) {
         this.rooms.delete(roomId)
+        console.log(`[Leqaa] تم حذف الغرفة الفارغة ${roomId}`)
       }
     }
 
@@ -133,34 +153,30 @@ class LeqaaWebSocketServer {
       payload: { userId }
     })
 
-    console.log(`[Leqaa] User ${userId} left room ${roomId}`)
+    console.log(`[Leqaa] المستخدم ${userId} غادر الغرفة ${roomId}`)
   }
 
   handleSendMessage(ws, { roomId, message }) {
+    if (!message || !message.content) {
+      return
+    }
+
+    // التحقق من طول الرسالة
+    if (message.content.length > 500) {
+      ws.send(JSON.stringify({
+        type: 'error',
+        payload: { message: 'الرسالة طويلة جداً' }
+      }))
+      return
+    }
+
     // بث الرسالة لجميع المشاركين في الغرفة
     this.broadcastToRoom(roomId, {
       type: 'new-message',
       payload: message
     })
 
-    console.log(`[Leqaa] Message sent in room ${roomId}`)
-  }
-
-  handleWebRTCSignaling(ws, message) {
-    const { type, payload } = message
-    const { roomId, targetUserId } = payload
-
-    // إرسال إشارة WebRTC للمستخدم المستهدف
-    const targetUser = this.users.get(targetUserId)
-    if (targetUser) {
-      targetUser.connection.send(JSON.stringify({
-        type,
-        payload: {
-          ...payload,
-          fromUserId: ws.userId
-        }
-      }))
-    }
+    console.log(`[Leqaa] رسالة أُرسلت في الغرفة ${roomId}`)
   }
 
   handleMediaStateChange(ws, { roomId, userId, hasAudio, hasVideo }) {
@@ -185,7 +201,11 @@ class LeqaaWebSocketServer {
     if (roomConnections) {
       roomConnections.forEach(connection => {
         if (connection !== excludeConnection && connection.readyState === WebSocket.OPEN) {
-          connection.send(JSON.stringify(message))
+          try {
+            connection.send(JSON.stringify(message))
+          } catch (error) {
+            console.error('[Leqaa] خطأ في إرسال الرسالة:', error)
+          }
         }
       })
     }
@@ -213,12 +233,29 @@ class LeqaaWebSocketServer {
 
     return stats
   }
+
+  stop() {
+    if (this.wss) {
+      this.wss.close()
+    }
+    if (this.server) {
+      this.server.close()
+    }
+    console.log('[Leqaa] تم إيقاف الخادم')
+  }
 }
 
 // تشغيل الخادم
 if (require.main === module) {
   const server = new LeqaaWebSocketServer(8080)
   server.start()
+
+  // إيقاف نظيف عند إنهاء العملية
+  process.on('SIGINT', () => {
+    console.log('\n[Leqaa] إيقاف الخادم...')
+    server.stop()
+    process.exit(0)
+  })
 }
 
 module.exports = LeqaaWebSocketServer

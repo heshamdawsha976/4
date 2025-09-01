@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ROOM_PLANS, type Room } from "@/lib/types"
+import { ROOM_PLANS, type Room, type RoomPlanDefinition } from "@/lib/types"
 import {
   MessageCircle, Users, Crown, Shield, Star, Globe, Search, Plus, Filter,
   Sparkles, Heart, Music, BookOpen, Coffee, Gamepad2, TrendingUp

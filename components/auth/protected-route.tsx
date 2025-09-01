@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useAuth } from "@/lib/auth/auth-context"
-import type { UserRole } from "@/lib/types/user"
+import type { UserRole } from "@/lib/types"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"

@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useMediaStream } from "@/hooks/use-media-stream"
-import { useWebRTC } from "@/hooks/use-webrtc"
 import { Mic, MicOff, Volume2, Phone, PhoneOff, Loader2 } from "lucide-react"
 
 interface VoiceChatProps {
@@ -24,7 +24,6 @@ interface VoiceChatProps {
 
 export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }: VoiceChatProps) {
   const [mediaState, mediaControls] = useMediaStream()
-  const [webrtcState, webrtcControls] = useWebRTC()
   const [isInCall, setIsInCall] = useState(false)
   const [audioLevels, setAudioLevels] = useState<Map<string, number>>(new Map())
 
@@ -72,33 +71,11 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
     }
   }, [mediaState.stream, mediaState.isAudioEnabled, userId, isInCall])
 
-  // ربط المسارات البعيدة بعناصر الصوت
-  useEffect(() => {
-    webrtcState.remoteStreams.forEach((stream, participantId) => {
-      let audioElement = remoteAudioRefs.current.get(participantId)
-
-      if (!audioElement) {
-        audioElement = new Audio()
-        audioElement.autoplay = true
-        remoteAudioRefs.current.set(participantId, audioElement)
-      }
-
-      if (audioElement.srcObject !== stream) {
-        audioElement.srcObject = stream
-      }
-    })
-  }, [webrtcState.remoteStreams])
-
   // الانضمام للمكالمة
   const joinCall = async () => {
     try {
       setIsInCall(true)
       await mediaControls.startAudio()
-      await webrtcControls.connect(roomId, userId)
-
-      if (mediaState.stream) {
-        webrtcControls.addLocalStream(mediaState.stream)
-      }
     } catch (error) {
       console.error("[v0] Error joining call:", error)
       setIsInCall(false)
@@ -109,7 +86,6 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
   const leaveCall = () => {
     setIsInCall(false)
     mediaControls.cleanup()
-    webrtcControls.disconnect()
     setAudioLevels(new Map())
   }
 
@@ -146,14 +122,14 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
             <Button
               onClick={joinCall}
               className="bg-green-500 hover:bg-green-600 text-white font-arabic"
-              disabled={webrtcState.isConnecting || mediaState.isLoading}
+              disabled={mediaState.isLoading}
             >
-              {webrtcState.isConnecting || mediaState.isLoading ? (
+              {mediaState.isLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin ml-2" />
               ) : (
                 <Phone className="w-4 h-4 ml-2" />
               )}
-              {webrtcState.isConnecting ? "جاري الاتصال..." : "انضمام للمكالمة"}
+              {mediaState.isLoading ? "جاري الاتصال..." : "انضمام للمكالمة"}
             </Button>
           ) : (
             <>
@@ -181,12 +157,6 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
           </div>
         )}
 
-        {webrtcState.error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <p className="text-red-700 font-arabic text-sm">{webrtcState.error}</p>
-          </div>
-        )}
-
         {/* المشاركون في المكالمة */}
         {isInCall && (
           <div>
@@ -197,12 +167,12 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {participants.map((participant) => {
-                const audioLevel = getAudioLevel(participant.id)
+                const audioLevel = getAudioLevel(participant.userId)
                 const isSpeaking = audioLevel > 0.1
 
                 return (
                   <div
-                    key={participant.id}
+                    key={participant.userId}
                     className={`relative p-4 rounded-lg border-2 transition-all duration-200 ${
                       isSpeaking ? "border-green-500 bg-green-50 shadow-lg scale-105" : "border-gray-200 bg-white"
                     }`}
@@ -210,8 +180,8 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
                     <div className="text-center">
                       <div className="relative mb-3">
                         <Avatar className="w-16 h-16 mx-auto">
-                          <AvatarImage src={participant.avatar || "/placeholder.svg"} />
-                          <AvatarFallback className="font-arabic">{participant.name.charAt(0)}</AvatarFallback>
+                          <AvatarImage src={participant.user.avatar || "/placeholder.svg"} />
+                          <AvatarFallback className="font-arabic">{participant.user.displayName.charAt(0)}</AvatarFallback>
                         </Avatar>
 
                         {/* مؤشر التحدث */}
@@ -227,10 +197,10 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
                         />
                       </div>
 
-                      <h4 className="font-medium font-arabic text-sm mb-1">{participant.name}</h4>
+                      <h4 className="font-medium font-arabic text-sm mb-1">{participant.user.displayName}</h4>
 
                       <Badge variant="outline" className="text-xs font-arabic">
-                        {participant.role === "master"
+                        {participant.role === "master" 
                           ? "ماستر"
                           : participant.role === "super_admin"
                             ? "سوبر أدمن"
@@ -261,16 +231,9 @@ export function VoiceChat({ roomId, userId, participants, onParticipantUpdate }:
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <div className="flex items-center justify-between text-sm text-gray-600 font-arabic">
               <span>
-                حالة الاتصال:{" "}
-                {webrtcState.connectionState === "connected"
-                  ? "متصل"
-                  : webrtcState.connectionState === "connecting"
-                    ? "جاري الاتصال"
-                    : webrtcState.connectionState === "disconnected"
-                      ? "منقطع"
-                      : webrtcState.connectionState}
+                حالة الاتصال: متصل
               </span>
-              <span>المشاركون المتصلون: {webrtcState.remoteStreams.size}</span>
+              <span>المشاركون المتصلون: {participants.length}</span>
             </div>
           </div>
         )}

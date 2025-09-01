@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useMediaStream } from "@/hooks/use-media-stream"
-import { useWebRTC } from "@/hooks/use-webrtc"
 import {
   Video,
   VideoOff,
@@ -35,13 +34,11 @@ interface VideoChatProps {
 
 export function VideoChat({ roomId, userId, participants, onParticipantUpdate }: VideoChatProps) {
   const [mediaState, mediaControls] = useMediaStream()
-  const [webrtcState, webrtcControls] = useWebRTC()
   const [isInCall, setIsInCall] = useState(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [selectedParticipant, setSelectedParticipant] = useState<string | null>(null)
 
   const localVideoRef = useRef<HTMLVideoElement>(null)
-  const remoteVideoRefs = useRef<Map<string, HTMLVideoElement>>(new Map())
   const containerRef = useRef<HTMLDivElement>(null)
 
   // ربط المسار المحلي بعنصر الفيديو
@@ -51,35 +48,11 @@ export function VideoChat({ roomId, userId, participants, onParticipantUpdate }:
     }
   }, [mediaState.stream])
 
-  // ربط المسارات البعيدة بعناصر الفيديو
-  useEffect(() => {
-    webrtcState.remoteStreams.forEach((stream, participantId) => {
-      let videoElement = remoteVideoRefs.current.get(participantId)
-
-      if (!videoElement) {
-        videoElement = document.createElement("video")
-        videoElement.autoplay = true
-        videoElement.playsInline = true
-        videoElement.muted = false // الفيديو البعيد لا يجب كتمه
-        remoteVideoRefs.current.set(participantId, videoElement)
-      }
-
-      if (videoElement.srcObject !== stream) {
-        videoElement.srcObject = stream
-      }
-    })
-  }, [webrtcState.remoteStreams])
-
   // الانضمام للمكالمة المرئية
   const joinVideoCall = async () => {
     try {
       setIsInCall(true)
       await mediaControls.startVideo()
-      await webrtcControls.connect(roomId, userId)
-
-      if (mediaState.stream) {
-        webrtcControls.addLocalStream(mediaState.stream)
-      }
     } catch (error) {
       console.error("[v0] Error joining video call:", error)
       setIsInCall(false)
@@ -90,8 +63,6 @@ export function VideoChat({ roomId, userId, participants, onParticipantUpdate }:
   const leaveCall = () => {
     setIsInCall(false)
     mediaControls.cleanup()
-    webrtcControls.disconnect()
-    remoteVideoRefs.current.clear()
   }
 
   // تبديل الكاميرا
@@ -140,7 +111,7 @@ export function VideoChat({ roomId, userId, participants, onParticipantUpdate }:
   }
 
   const getParticipantVideo = (participantId: string) => {
-    return remoteVideoRefs.current.get(participantId)
+    return null // مبسط للآن
   }
 
   return (
@@ -262,24 +233,23 @@ export function VideoChat({ roomId, userId, participants, onParticipantUpdate }:
                 )}
               </div>
 
-              {/* شريط المشاركين السفلي */}
-              <div className="absolute bottom-4 left-4 right-4">
+                {participants.slice(0, 3).map((participant) => {
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {/* الفيديو المحلي المصغر */}
                   <div
                     className={`relative flex-shrink-0 w-32 h-24 bg-gray-900 rounded-lg overflow-hidden cursor-pointer border-2 ${
-                      !selectedParticipant ? "border-white" : "border-transparent"
+                      key={participant.id}
                     }`}
-                    onClick={() => setSelectedParticipant(null)}
+                        selectedParticipant === participant.id ? "border-white" : "border-transparent"
                   >
-                    {mediaState.isVideoEnabled ? (
+                      onClick={() => setSelectedParticipant(participant.id)}
                       <video
-                        autoPlay
-                        playsInline
-                        muted
-                        className="w-full h-full object-cover"
-                        srcObject={mediaState.stream}
-                      />
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="text-center text-white">
+                          <div className="text-2xl mb-1">{participant.name.charAt(0)}</div>
+                          <div className="text-xs">{participant.name}</div>
+                        </div>
+                      </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <VideoOff className="w-6 h-6 text-gray-400" />
@@ -354,9 +324,9 @@ export function VideoChat({ roomId, userId, participants, onParticipantUpdate }:
           )}
 
           {/* رسائل الخطأ */}
-          {(mediaState.error || webrtcState.error) && (
+          {mediaState.error && (
             <div className="p-4 bg-red-50 border-t border-red-200">
-              <p className="text-red-700 font-arabic text-sm">{mediaState.error || webrtcState.error}</p>
+              <p className="text-red-700 font-arabic text-sm">{mediaState.error}</p>
             </div>
           )}
         </CardContent>
@@ -365,52 +335,3 @@ export function VideoChat({ roomId, userId, participants, onParticipantUpdate }:
   )
 }
 
-// مكون فرعي لعرض فيديو المشارك
-function VideoParticipant({
-  participantId,
-  participant,
-  videoElement,
-  isMain,
-}: {
-  participantId: string
-  participant: any
-  videoElement?: HTMLVideoElement
-  isMain: boolean
-}) {
-  const videoRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (videoRef.current && videoElement) {
-      videoRef.current.appendChild(videoElement)
-      videoElement.className = "w-full h-full object-cover"
-    }
-
-    return () => {
-      if (videoElement && videoElement.parentNode) {
-        videoElement.parentNode.removeChild(videoElement)
-      }
-    }
-  }, [videoElement])
-
-  return (
-    <div className="relative w-full h-full">
-      <div ref={videoRef} className="w-full h-full bg-gray-800">
-        {!videoElement && (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-center text-white">
-              <Avatar className={`mx-auto mb-2 ${isMain ? "w-16 h-16" : "w-8 h-8"}`}>
-                <AvatarImage src={participant.avatar || "/placeholder.svg"} />
-                <AvatarFallback className="font-arabic">{participant.name.charAt(0)}</AvatarFallback>
-              </Avatar>
-              {isMain && <p className="font-arabic text-sm opacity-75">الكاميرا مغلقة</p>}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className={`absolute ${isMain ? "bottom-4 left-4" : "bottom-1 left-1"}`}>
-        <Badge className="bg-black/70 text-white font-arabic text-xs">{participant.name}</Badge>
-      </div>
-    </div>
-  )
-}

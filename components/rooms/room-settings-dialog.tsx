@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { RoomPlanBadge } from "@/components/ui/room-plan-badge"
-import type { Room } from "@/lib/types"
+import type { Room, RoomPlanDefinition } from "@/lib/types"
 import { Save, X } from "lucide-react"
 
 interface RoomSettingsDialogProps {
@@ -59,7 +59,7 @@ export function RoomSettingsDialog({ open, onOpenChange, room, onUpdateRoom }: R
             <div>
               <Label className="font-arabic">خطة الغرفة</Label>
               <div className="mt-2">
-                <RoomPlanBadge plan={room.plan} size="lg" />
+                <RoomPlanBadge plan={room.plan as RoomPlanDefinition} size="lg" />
               </div>
             </div>
           </div>
@@ -120,7 +120,7 @@ export function RoomSettingsDialog({ open, onOpenChange, room, onUpdateRoom }: R
                 <Switch
                   checked={settings.allowVideoChat}
                   onCheckedChange={(checked) => setSettings({ ...settings, allowVideoChat: checked })}
-                  disabled={room.plan.id === "basic"}
+                  disabled={room.plan === "basic"}
                 />
               </div>
 
@@ -132,7 +132,7 @@ export function RoomSettingsDialog({ open, onOpenChange, room, onUpdateRoom }: R
                 <Switch
                   checked={settings.allowFileSharing}
                   onCheckedChange={(checked) => setSettings({ ...settings, allowFileSharing: checked })}
-                  disabled={!["premium", "gold"].includes(room.plan.id)}
+                  disabled={!["premium", "gold"].includes(room.plan)}
                 />
               </div>
             </div>
@@ -144,11 +144,11 @@ export function RoomSettingsDialog({ open, onOpenChange, room, onUpdateRoom }: R
                 value={settings.maxParticipants}
                 onChange={(e) => setSettings({ ...settings, maxParticipants: Number.parseInt(e.target.value) })}
                 min="1"
-                max={room.plan.maxUsers}
+                max={room.maxUsers}
                 className="mt-1"
               />
               <p className="text-sm text-muted-foreground font-arabic mt-1">
-                الحد الأقصى المسموح: {room.plan.maxUsers} مستخدم
+                الحد الأقصى المسموح: {room.maxUsers} مستخدم
               </p>
             </div>
           </div>

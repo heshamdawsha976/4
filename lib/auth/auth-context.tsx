@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import type { User } from "@/lib/types/user"
+import type { User } from "@/lib/types"
 
 interface AuthContextType {
   user: User | null
@@ -57,33 +57,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // محاكاة بيانات مستخدم
       const mockUser: User = {
         id: "1",
-        username: "ahmed_mohamed",
-        firstName: "أحمد",
-        lastName: "محمد",
+        username: "ahmed_thaqafi",
+        displayName: "أحمد محمد الثقافي",
         email: email,
-        country: "SA",
+        country: "مصر",
         role: "member",
         isOnline: true,
         lastSeen: new Date(),
         joinedAt: new Date(),
-        coins: 100,
-        level: 1,
-        experience: 0,
-        badges: [],
-        preferences: {
-          language: "ar",
-          notifications: {
-            sound: true,
-            mentions: true,
-            privateMessages: true,
-            roomInvites: true,
-          },
-          privacy: {
-            showOnlineStatus: true,
-            allowPrivateMessages: true,
-            showProfile: true,
-          },
-        },
       }
 
       setUser(mockUser)
@@ -106,33 +87,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const newUser: User = {
         id: Date.now().toString(),
         username: userData.username,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
+        displayName: `${userData.firstName} ${userData.lastName}`,
         email: userData.email,
-        phone: userData.phone,
         country: userData.country,
         role: "member",
         isOnline: true,
         lastSeen: new Date(),
         joinedAt: new Date(),
-        coins: 50, // عملات ترحيبية
-        level: 1,
-        experience: 0,
-        badges: ["new_member"],
-        preferences: {
-          language: "ar",
-          notifications: {
-            sound: true,
-            mentions: true,
-            privateMessages: true,
-            roomInvites: true,
-          },
-          privacy: {
-            showOnlineStatus: true,
-            allowPrivateMessages: true,
-            showProfile: true,
-          },
-        },
       }
 
       setUser(newUser)

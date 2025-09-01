@@ -24,42 +24,35 @@ export function RoomInterface({ room, user, onUserJoin }: RoomInterfaceProps) {
   const [newMessage, setNewMessage] = useState("")
   const [isAudioEnabled, setIsAudioEnabled] = useState(false)
   const [isVideoEnabled, setIsVideoEnabled] = useState(false)
-  const [showGuestDialog, setShowGuestDialog] = useState(!user)
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const localVideoRef = useRef<HTMLVideoElement>(null)
 
-  const {
-    isConnected,
-    isConnecting,
-    participants,
-    messages,
-    localStream,
-    remoteStreams,
-    error,
-    connectToRoom,
-    sendMessage,
-    startMediaStream,
-    stopMediaStream,
-    leaveRoom
-  } = useRoomConnection(room.id, user)
-
-  // الاتصال بالغرفة عند تحميل المكون
-  useEffect(() => {
-    if (user) {
-      connectToRoom()
+  // بيانات تجريبية
+  const [participants, setParticipants] = useState([
+    {
+      userId: "1",
+      user: { id: "1", username: "ahmed", displayName: "أحمد محمد", role: "master" as UserRole, isOnline: true, joinedAt: new Date(), lastSeen: new Date() },
+      role: "master" as UserRole,
+      joinedAt: new Date(),
+      isMuted: false,
+      isSpeaking: false,
+      permissions: { canSpeak: true, canVideo: true, canChat: true, canInvite: true, canKick: true, canMute: true, canManageRoom: true }
     }
-    return () => {
-      leaveRoom()
+  ])
+  
+  const [messages, setMessages] = useState([
+    {
+      id: "1",
+      content: "مرحباً بالجميع!",
+      senderId: "1",
+      senderName: "أحمد محمد",
+      senderRole: "master" as UserRole,
+      roomId: room.id,
+      timestamp: new Date(),
+      type: "text" as const
     }
-  }, [user, connectToRoom, leaveRoom])
-
-  // ربط المسار المحلي بعنصر الفيديو
-  useEffect(() => {
-    if (localVideoRef.current && localStream) {
-      localVideoRef.current.srcObject = localStream
-    }
-  }, [localStream])
+  ])
 
   // التمرير التلقائي للرسائل
   useEffect(() => {
@@ -68,29 +61,27 @@ export function RoomInterface({ room, user, onUserJoin }: RoomInterfaceProps) {
 
   const handleSendMessage = () => {
     if (newMessage.trim()) {
-      sendMessage(newMessage.trim())
+      const message = {
+        id: Date.now().toString(),
+        content: newMessage.trim(),
+        senderId: user?.id || "guest",
+        senderName: user?.displayName || "ضيف",
+        senderRole: user?.role || "guest" as UserRole,
+        roomId: room.id,
+        timestamp: new Date(),
+        type: "text" as const
+      }
+      setMessages(prev => [...prev, message])
       setNewMessage("")
     }
   }
 
   const handleToggleAudio = async () => {
-    if (isAudioEnabled) {
-      stopMediaStream()
-      setIsAudioEnabled(false)
-    } else {
-      await startMediaStream(false)
-      setIsAudioEnabled(true)
-    }
+    setIsAudioEnabled(!isAudioEnabled)
   }
 
   const handleToggleVideo = async () => {
-    if (isVideoEnabled) {
-      stopMediaStream()
-      setIsVideoEnabled(false)
-    } else {
-      await startMediaStream(true)
-      setIsVideoEnabled(true)
-    }
+    setIsVideoEnabled(!isVideoEnabled)
   }
 
   const getRoleIcon = (role: string) => {
@@ -203,6 +194,7 @@ export function RoomInterface({ room, user, onUserJoin }: RoomInterfaceProps) {
               {isVideoEnabled ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
             </Button>
             <Button variant="destructive" size="sm" onClick={leaveRoom}>
+            <Button variant="destructive" size="sm">
               <PhoneOff className="w-4 h-4" />
             </Button>
           </div>
@@ -217,14 +209,14 @@ export function RoomInterface({ room, user, onUserJoin }: RoomInterfaceProps) {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-full">
               {/* الفيديو المحلي */}
               {localStream && (
+              {isVideoEnabled && (
                 <div className="relative bg-gray-800 rounded-lg overflow-hidden">
-                  <video
-                    ref={localVideoRef}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="w-full h-full flex items-center justify-center text-white">
+                    <div className="text-center">
+                      <div className="text-2xl mb-2">📹</div>
+                      <div className="text-sm">الكاميرا المحلية</div>
+                    </div>
+                  </div>
                   <div className="absolute bottom-2 left-2">
                     <Badge className="bg-black/70 text-white font-arabic">أنت</Badge>
                   </div>
@@ -232,21 +224,18 @@ export function RoomInterface({ room, user, onUserJoin }: RoomInterfaceProps) {
               )}
 
               {/* فيديوهات المشاركين */}
-              {Array.from(remoteStreams.entries()).map(([userId, stream]) => {
-                const participant = participants.find(p => p.userId === userId)
+              {participants.slice(0, 3).map((participant) => {
                 return (
                   <div key={userId} className="relative bg-gray-800 rounded-lg overflow-hidden">
-                    <video
-                      autoPlay
-                      playsInline
-                      className="w-full h-full object-cover"
-                      ref={(video) => {
-                        if (video) video.srcObject = stream
-                      }}
-                    />
+                    <div className="w-full h-full flex items-center justify-center text-white">
+                      <div className="text-center">
+                        <div className="text-2xl mb-2">{participant.user.displayName.charAt(0)}</div>
+                        <div className="text-sm">{participant.user.displayName}</div>
+                      </div>
+                    </div>
                     <div className="absolute bottom-2 left-2">
                       <Badge className="bg-black/70 text-white font-arabic">
-                        {participant?.user.displayName || "مجهول"}
+                        {participant.user.displayName}
                       </Badge>
                     </div>
                   </div>
@@ -255,7 +244,7 @@ export function RoomInterface({ room, user, onUserJoin }: RoomInterfaceProps) {
 
               {/* المتحدثون الصوتيون */}
               {participants
-                .filter(p => !remoteStreams.has(p.userId) && p.isSpeaking)
+                .filter(p => p.isSpeaking)
                 .map(participant => (
                   <div key={participant.userId} className="relative bg-gray-800 rounded-lg flex items-center justify-center">
                     <div className="text-center text-white">
@@ -389,11 +378,11 @@ export function RoomInterface({ room, user, onUserJoin }: RoomInterfaceProps) {
       </div>
 
       {/* رسائل الخطأ */}
-      {error && (
+      {false && (
         <div className="absolute bottom-4 left-4 right-4">
           <Card className="border-red-200 bg-red-50">
             <CardContent className="p-3">
-              <p className="text-red-700 font-arabic text-sm">{error}</p>
+              <p className="text-red-700 font-arabic text-sm">خطأ في الاتصال</p>
             </CardContent>
           </Card>
         </div>

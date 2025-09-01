@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent } from "@/components/ui/card"
 import { RoomPlanBadge } from "@/components/ui/room-plan-badge"
-import { ROOM_PLANS, type Room, type RoomPlan, type RoomSettings } from "@/lib/types"
+import { ROOM_PLANS, type Room, type RoomPlanDefinition, type RoomSettings } from "@/lib/types"
 import { Check } from "lucide-react"
 
 interface CreateRoomDialogProps {
@@ -19,7 +19,7 @@ interface CreateRoomDialogProps {
 }
 
 export function CreateRoomDialog({ open, onOpenChange, onCreateRoom }: CreateRoomDialogProps) {
-  const [selectedPlan, setSelectedPlan] = useState<RoomPlan>(ROOM_PLANS[3]) // Basic plan by default
+  const [selectedPlan, setSelectedPlan] = useState<RoomPlanDefinition>(ROOM_PLANS[3]) // Basic plan by default
   const [roomName, setRoomName] = useState("")
   const [roomDescription, setRoomDescription] = useState("")
   const [settings, setSettings] = useState<RoomSettings>({
@@ -32,7 +32,7 @@ export function CreateRoomDialog({ open, onOpenChange, onCreateRoom }: CreateRoo
     allowFileSharing: false,
   })
 
-  const handlePlanSelect = (plan: RoomPlan) => {
+  const handlePlanSelect = (plan: RoomPlanDefinition) => {
     setSelectedPlan(plan)
     setSettings({
       ...settings,

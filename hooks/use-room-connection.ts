@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { getWebSocketClient } from "@/lib/websocket/client"
-import { PeerConnectionManager } from "@/lib/webrtc/peer-connection"
 import type { User, Message, RoomParticipant } from "@/lib/types"
 
 interface RoomConnectionState {
@@ -27,34 +26,12 @@ export function useRoomConnection(roomId: string, user: User | null) {
   })
 
   const wsClient = useRef(getWebSocketClient())
-  const peerManager = useRef<PeerConnectionManager | null>(null)
 
   const updateState = useCallback((updates: Partial<RoomConnectionState>) => {
     setState(prev => ({ ...prev, ...updates }))
   }, [])
 
   // إعداد PeerConnectionManager
-  useEffect(() => {
-    peerManager.current = new PeerConnectionManager(
-      (userId, stream) => {
-        setState(prev => ({
-          ...prev,
-          remoteStreams: new Map(prev.remoteStreams.set(userId, stream))
-        }))
-      },
-      (userId, candidate) => {
-        wsClient.current.send('ice-candidate', {
-          roomId,
-          targetUserId: userId,
-          candidate
-        })
-      }
-    )
-
-    return () => {
-      peerManager.current?.cleanup()
-    }
-  }, [roomId])
 
   // الاتصال بالغرفة
   const connectToRoom = useCallback(async () => {
@@ -71,17 +48,6 @@ export function useRoomConnection(roomId: string, user: User | null) {
           ...prev,
           participants: [...prev.participants, data.user]
         }))
-
-        // إنشاء اتصال WebRTC مع المستخدم الجديد
-        if (peerManager.current && data.user.id !== user.id) {
-          peerManager.current.createOffer(data.user.id).then(offer => {
-            wsClient.current.send('webrtc-offer', {
-              roomId,
-              targetUserId: data.user.id,
-              offer
-            })
-          })
-        }
       })
 
       wsClient.current.on('user-left', (data: any) => {
@@ -90,8 +56,6 @@ export function useRoomConnection(roomId: string, user: User | null) {
           participants: prev.participants.filter(p => p.userId !== data.userId),
           remoteStreams: new Map([...prev.remoteStreams].filter(([id]) => id !== data.userId))
         }))
-
-        peerManager.current?.removePeerConnection(data.userId)
       })
 
       wsClient.current.on('new-message', (message: Message) => {
@@ -99,25 +63,6 @@ export function useRoomConnection(roomId: string, user: User | null) {
           ...prev,
           messages: [...prev.messages, message]
         }))
-      })
-
-      wsClient.current.on('webrtc-offer', async (data: any) => {
-        if (peerManager.current) {
-          const answer = await peerManager.current.createAnswer(data.fromUserId, data.offer)
-          wsClient.current.send('webrtc-answer', {
-            roomId,
-            targetUserId: data.fromUserId,
-            answer
-          })
-        }
-      })
-
-      wsClient.current.on('webrtc-answer', (data: any) => {
-        peerManager.current?.handleAnswer(data.fromUserId, data.answer)
-      })
-
-      wsClient.current.on('ice-candidate', (data: any) => {
-        peerManager.current?.handleIceCandidate(data.fromUserId, data.candidate)
       })
 
       // الانضمام للغرفة
@@ -178,7 +123,6 @@ export function useRoomConnection(roomId: string, user: User | null) {
       })
 
       updateState({ localStream: stream })
-      await peerManager.current?.setLocalStream(stream)
 
       wsClient.current.send('media-state-changed', {
         roomId,
@@ -211,7 +155,6 @@ export function useRoomConnection(roomId: string, user: User | null) {
   // مغادرة الغرفة
   const leaveRoom = useCallback(() => {
     wsClient.current.send('leave-room', { roomId, userId: user?.id })
-    peerManager.current?.cleanup()
     updateState({
       isConnected: false,
       participants: [],

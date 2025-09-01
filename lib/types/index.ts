@@ -14,13 +14,13 @@ export interface User {
   isOnline: boolean
   joinedAt: Date
   lastSeen: Date
-  isGuest: boolean
+  isGuest?: boolean
 }
 
 export interface Room {
   id: string
   name: string
-  description: string
+  description?: string
   plan: RoomPlan
   ownerId: string
   isActive: boolean
@@ -87,22 +87,13 @@ export interface RoomPlanDefinition {
 // تعريف خطط الغرف
 export const ROOM_PLANS: RoomPlanDefinition[] = [
   {
-    id: "basic",
-    name: "Basic",
-    nameAr: "أساسي",
-    color: "#6B7280",
-    maxUsers: 50,
-    price: 0,
-    features: ["دردشة نصية", "استماع للبث", "رموز تعبيرية أساسية"]
-  },
-  {
-    id: "silver",
-    name: "Silver",
-    nameAr: "فضي",
-    color: "#9CA3AF",
-    maxUsers: 200,
-    price: 19,
-    features: ["دردشة نصية", "بث صوتي", "رموز تعبيرية متقدمة"]
+    id: "premium",
+    name: "Premium",
+    nameAr: "مميز",
+    color: "#8B5CF6",
+    maxUsers: 1000,
+    price: 99,
+    features: ["جميع الميزات", "تسجيل الجلسات", "تحليلات متقدمة", "دعم VIP"]
   },
   {
     id: "gold",
@@ -114,13 +105,22 @@ export const ROOM_PLANS: RoomPlanDefinition[] = [
     features: ["دردشة نصية", "بث صوتي ومرئي", "هدايا افتراضية", "إدارة متقدمة"]
   },
   {
-    id: "premium",
-    name: "Premium",
-    nameAr: "مميز",
-    color: "#8B5CF6",
-    maxUsers: 1000,
-    price: 99,
-    features: ["جميع الميزات", "تسجيل الجلسات", "تحليلات متقدمة", "دعم VIP"]
+    id: "silver",
+    name: "Silver",
+    nameAr: "فضي",
+    color: "#9CA3AF",
+    maxUsers: 200,
+    price: 19,
+    features: ["دردشة نصية", "بث صوتي", "رموز تعبيرية متقدمة"]
+  },
+  {
+    id: "basic",
+    name: "Basic",
+    nameAr: "أساسي",
+    color: "#6B7280",
+    maxUsers: 50,
+    price: 0,
+    features: ["دردشة نصية", "استماع للبث", "رموز تعبيرية أساسية"]
   }
 ]
 
